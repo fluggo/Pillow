@@ -28,70 +28,70 @@
 
 __version__ = "0.7"
 
-import re, string
-import Image, ImageFile, ImagePalette
+import re
+from . import Image, ImageFile, ImagePalette
 
 
 # --------------------------------------------------------------------
 # Standard tags
 
-COMMENT = "Comment"
-DATE = "Date"
-EQUIPMENT = "Digitalization equipment"
-FRAMES = "File size (no of images)"
-LUT = "Lut"
-NAME = "Name"
-SCALE = "Scale (x,y)"
-SIZE = "Image size (x*y)"
-MODE = "Image type"
+COMMENT = b"Comment"
+DATE = b"Date"
+EQUIPMENT = b"Digitalization equipment"
+FRAMES = b"File size (no of images)"
+LUT = b"Lut"
+NAME = b"Name"
+SCALE = b"Scale (x,y)"
+SIZE = b"Image size (x*y)"
+MODE = b"Image type"
 
 TAGS = { COMMENT:0, DATE:0, EQUIPMENT:0, FRAMES:0, LUT:0, NAME:0,
          SCALE:0, SIZE:0, MODE:0 }
 
 OPEN = {
     # ifunc93/p3cfunc formats
-    "0 1 image": ("1", "1"),
-    "L 1 image": ("1", "1"),
-    "Greyscale image": ("L", "L"),
-    "Grayscale image": ("L", "L"),
-    "RGB image": ("RGB", "RGB;L"),
-    "RLB image": ("RGB", "RLB"),
-    "RYB image": ("RGB", "RLB"),
-    "B1 image": ("1", "1"),
-    "B2 image": ("P", "P;2"),
-    "B4 image": ("P", "P;4"),
-    "X 24 image": ("RGB", "RGB"),
-    "L 32 S image": ("I", "I;32"),
-    "L 32 F image": ("F", "F;32"),
+    b"0 1 image": ("1", "1"),
+    b"L 1 image": ("1", "1"),
+    b"Greyscale image": ("L", "L"),
+    b"Grayscale image": ("L", "L"),
+    b"RGB image": ("RGB", "RGB;L"),
+    b"RLB image": ("RGB", "RLB"),
+    b"RYB image": ("RGB", "RLB"),
+    b"B1 image": ("1", "1"),
+    b"B2 image": ("P", "P;2"),
+    b"B4 image": ("P", "P;4"),
+    b"X 24 image": ("RGB", "RGB"),
+    b"L 32 S image": ("I", "I;32"),
+    b"L 32 F image": ("F", "F;32"),
     # old p3cfunc formats
-    "RGB3 image": ("RGB", "RGB;T"),
-    "RYB3 image": ("RGB", "RYB;T"),
+    b"RGB3 image": ("RGB", "RGB;T"),
+    b"RYB3 image": ("RGB", "RYB;T"),
     # extensions
-    "LA image": ("LA", "LA;L"),
-    "RGBA image": ("RGBA", "RGBA;L"),
-    "RGBX image": ("RGBX", "RGBX;L"),
-    "CMYK image": ("CMYK", "CMYK;L"),
-    "YCC image": ("YCbCr", "YCbCr;L"),
+    b"LA image": ("LA", "LA;L"),
+    b"RGBA image": ("RGBA", "RGBA;L"),
+    b"RGBX image": ("RGBX", "RGBX;L"),
+    b"CMYK image": ("CMYK", "CMYK;L"),
+    b"YCC image": ("YCbCr", "YCbCr;L"),
 }
 
 # ifunc95 extensions
 for i in ["8", "8S", "16", "16S", "32", "32F"]:
-    OPEN["L %s image" % i] = ("F", "F;%s" % i)
-    OPEN["L*%s image" % i] = ("F", "F;%s" % i)
+    OPEN[bytes("L %s image" % i, 'ascii')] = ("F", "F;%s" % i)
+    OPEN[bytes("L*%s image" % i, 'ascii')] = ("F", "F;%s" % i)
 for i in ["16", "16L", "16B"]:
-    OPEN["L %s image" % i] = ("I;%s" % i, "I;%s" % i)
-    OPEN["L*%s image" % i] = ("I;%s" % i, "I;%s" % i)
+    OPEN[bytes("L %s image" % i, 'ascii')] = ("I;%s" % i, "I;%s" % i)
+    OPEN[bytes("L*%s image" % i, 'ascii')] = ("I;%s" % i, "I;%s" % i)
 for i in ["32S"]:
-    OPEN["L %s image" % i] = ("I", "I;%s" % i)
-    OPEN["L*%s image" % i] = ("I", "I;%s" % i)
+    OPEN[bytes("L %s image" % i, 'ascii')] = ("I", "I;%s" % i)
+    OPEN[bytes("L*%s image" % i, 'ascii')] = ("I", "I;%s" % i)
 for i in range(2, 33):
-    OPEN["L*%s image" % i] = ("F", "F;%s" % i)
+    OPEN[bytes("L*%s image" % i, 'ascii')] = ("F", "F;%s" % i)
 
 
 # --------------------------------------------------------------------
 # Read IM directory
 
-split = re.compile(r"^([A-Za-z][^:]*):[ \t]*(.*)[ \t]*$")
+split = re.compile(br"^([A-Za-z][^:]*):[ \t]*(.*)[ \t]*$")
 
 def number(s):
     try:
@@ -112,8 +112,8 @@ class ImImageFile(ImageFile.ImageFile):
         # Quick rejection: if there's not an LF among the first
         # 100 bytes, this is (probably) not a text header.
 
-        if not "\n" in self.fp.read(100):
-            raise SyntaxError, "not an IM file"
+        if not b"\n" in self.fp.read(100):
+            raise SyntaxError("not an IM file")
         self.fp.seek(0)
 
         n = 0
@@ -130,27 +130,27 @@ class ImImageFile(ImageFile.ImageFile):
             s = self.fp.read(1)
 
             # Some versions of IFUNC uses \n\r instead of \r\n...
-            if s == "\r":
+            if s == b"\r":
                 continue
 
-            if not s or s[0] == chr(0) or s[0] == chr(26):
+            if not s or (s[0] == 0) or (s[0] == 26):
                 break
 
             # FIXME: this may read whole file if not a text file
             s = s + self.fp.readline()
 
             if len(s) > 100:
-                raise SyntaxError, "not an IM file"
+                raise SyntaxError("not an IM file")
 
-            if s[-2:] == '\r\n':
+            if s[-2:] == b'\r\n':
                 s = s[:-2]
-            elif s[-1:] == '\n':
+            elif s[-1:] == b'\n':
                 s = s[:-1]
 
             try:
                 m = split.match(s)
-            except re.error, v:
-                raise SyntaxError, "not an IM file"
+            except re.error as v:
+                raise SyntaxError("not an IM file")
 
             if m:
 
@@ -158,58 +158,59 @@ class ImImageFile(ImageFile.ImageFile):
 
                 # Convert value as appropriate
                 if k in [FRAMES, SCALE, SIZE]:
-                    v = string.replace(v, "*", ",")
-                    v = tuple(map(number, string.split(v, ",")))
+                    v = v.replace(b"*", b",")
+                    v = tuple(map(number, v.split(b",")))
                     if len(v) == 1:
                         v = v[0]
-                elif k == MODE and OPEN.has_key(v):
+                elif (k == MODE) and (v in OPEN):
                     v, self.rawmode = OPEN[v]
 
                 # Add to dictionary. Note that COMMENT tags are
                 # combined into a list of strings.
                 if k == COMMENT:
-                    if self.info.has_key(k):
+                    if k in self.info:
                         self.info[k].append(v)
                     else:
                         self.info[k] = [v]
                 else:
                     self.info[k] = v
 
-                if TAGS.has_key(k):
+                if k in TAGS:
                     n = n + 1
 
             else:
 
-                raise SyntaxError, "Syntax error in IM header: " + s
+                raise SyntaxError("Syntax error in IM header: " + str(s))
 
         if not n:
-            raise SyntaxError, "Not an IM file"
+            raise SyntaxError("Not an IM file")
 
         # Basic attributes
         self.size = self.info[SIZE]
         self.mode = self.info[MODE]
 
         # Skip forward to start of image data
-        while s and s[0] != chr(26):
+        while s and (s[0] != 26):
             s = self.fp.read(1)
         if not s:
-            raise SyntaxError, "File truncated"
+            raise SyntaxError("File truncated")
 
-        if self.info.has_key(LUT):
+        if LUT in self.info:
             # convert lookup table to palette or lut attribute
             palette = self.fp.read(768)
             greyscale = 1 # greyscale palette
             linear = 1 # linear greyscale palette
             for i in range(256):
                 if palette[i] == palette[i+256] == palette[i+512]:
-                    if palette[i] != chr(i):
+                    if palette[i] != i:
                         linear = 0
                 else:
                     greyscale = 0
             if self.mode == "L" or self.mode == "LA":
                 if greyscale:
                     if not linear:
-                        self.lut = map(ord, palette[:256])
+                        #self.lut = list(map(ord, palette[:256]))
+                        self.lut = list(palette[:256])
                 else:
                     if self.mode == "L":
                         self.mode = self.rawmode = "P"
@@ -218,7 +219,8 @@ class ImImageFile(ImageFile.ImageFile):
                     self.palette = ImagePalette.raw("RGB;L", palette)
             elif self.mode == "RGB":
                 if not greyscale or not linear:
-                    self.lut = map(ord, palette)
+                    #self.lut = list(map(ord, palette))
+                    self.lut = list(palette)
 
         self.frame = 0
 
@@ -253,7 +255,7 @@ class ImImageFile(ImageFile.ImageFile):
     def seek(self, frame):
 
         if frame < 0 or frame >= self.info[FRAMES]:
-            raise EOFError, "seek outside sequence"
+            raise EOFError("seek outside sequence")
 
         if self.frame == frame:
             return
@@ -265,7 +267,7 @@ class ImImageFile(ImageFile.ImageFile):
         else:
             bits = 8 * len(self.mode)
 
-        size = ((self.size[0] * bits + 7) / 8) * self.size[1]
+        size = ((self.size[0] * bits + 7) // 8) * self.size[1]
         offs = self.__offset + frame * size
 
         self.fp = self.__fp
@@ -304,7 +306,7 @@ def _save(im, fp, filename, check=0):
     try:
         type, rawmode = SAVE[im.mode]
     except KeyError:
-        raise ValueError, "Cannot save %s images as IM" % im.mode
+        raise ValueError("Cannot save %s images as IM" % im.mode)
 
     try:
         frames = im.encoderinfo["frames"]
@@ -314,14 +316,15 @@ def _save(im, fp, filename, check=0):
     if check:
         return check
 
-    fp.write("Image type: %s image\r\n" % type)
+    fp.write(bytes("Image type: %s image\r\n" % type, encoding='ascii'))
     if filename:
-        fp.write("Name: %s\r\n" % filename)
-    fp.write("Image size (x*y): %d*%d\r\n" % im.size)
-    fp.write("File size (no of images): %d\r\n" % frames)
+        fp.write(b"Name: " + bytes(filename, encoding='utf8') + b"\r\n")
+    fp.write(bytes("Image size (x*y): %d*%d\r\n" % im.size, encoding='ascii'))
+    fp.write(bytes("File size (no of images): %d\r\n" % frames,
+        encoding='ascii'))
     if im.mode == "P":
-        fp.write("Lut: 1\r\n")
-    fp.write("\000" * (511-fp.tell()) + "\032")
+        fp.write(b"Lut: 1\r\n")
+    fp.write(b"\000" * (511-fp.tell()) + b"\032")
     if im.mode == "P":
         fp.write(im.im.getpalette("RGB", "RGB;L")) # 768 bytes
     ImageFile._save(im, fp, [("raw", (0,0)+im.size, 0, (rawmode, 0, -1))])

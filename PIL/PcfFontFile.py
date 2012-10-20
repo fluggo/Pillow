@@ -16,10 +16,8 @@
 # See the README file for information on usage and redistribution.
 #
 
-import Image
-import FontFile
-
-import string
+from . import Image
+from . import FontFile
 
 # --------------------------------------------------------------------
 # declarations
@@ -45,17 +43,17 @@ BYTES_PER_ROW = [
 
 
 def l16(c):
-    return ord(c[0]) + (ord(c[1])<<8)
+    return c[0] + (c[1] << 8)
 def l32(c):
-    return ord(c[0]) + (ord(c[1])<<8) + (ord(c[2])<<16) + (ord(c[3])<<24)
+    return c[0] + (c[1] << 8) + (c[2] << 16) + (c[3] << 24)
 
 def b16(c):
-    return ord(c[1]) + (ord(c[0])<<8)
+    return c[1] + (c[0] << 8)
 def b32(c):
-    return ord(c[3]) + (ord(c[2])<<8) + (ord(c[1])<<16) + (ord(c[0])<<24)
+    return c[3] + (c[2] << 8) + (c[1] << 16) + (c[0] << 24)
 
 def sz(s, o):
-    return s[o:string.index(s, "\0", o)]
+    return s[o:s.index(b"\0", o)]
 
 ##
 # Font file plugin for the X11 PCF format.
@@ -68,7 +66,7 @@ class PcfFontFile(FontFile.FontFile):
 
         magic = l32(fp.read(4))
         if magic != PCF_MAGIC:
-            raise SyntaxError, "not a PCF file"
+            raise SyntaxError("not a PCF file")
 
         FontFile.FontFile.__init__(self)
 
@@ -198,7 +196,7 @@ class PcfFontFile(FontFile.FontFile):
         nbitmaps = i32(fp.read(4))
 
         if nbitmaps != len(metrics):
-            raise IOError, "Wrong number of bitmaps"
+            raise IOError("Wrong number of bitmaps")
 
         offsets = []
         for i in range(nbitmaps):
@@ -226,7 +224,7 @@ class PcfFontFile(FontFile.FontFile):
             x, y, l, r, w, a, d, f = metrics[i]
             b, e = offsets[i], offsets[i+1]
             bitmaps.append(
-                Image.fromstring("1", (x, y), data[b:e], "raw", mode, pad(x))
+                Image.frombytes("1", (x, y), data[b:e], "raw", mode, pad(x))
                 )
 
         return bitmaps

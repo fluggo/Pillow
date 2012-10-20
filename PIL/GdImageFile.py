@@ -25,10 +25,10 @@
 
 __version__ = "0.1"
 
-import ImageFile, ImagePalette
+from . import ImageFile, ImagePalette
 
 def i16(c):
-    return ord(c[1]) + (ord(c[0])<<8)
+    return c[1] + (c[0] << 8)
 
 ##
 # Image plugin for the GD uncompressed format.  Note that this format
@@ -73,9 +73,9 @@ def open(fp, mode = "r"):
         raise ValueError("bad mode")
 
     if type(fp) == type(""):
-        import __builtin__
+        import builtins
         filename = fp
-        fp = __builtin__.open(fp, "rb")
+        fp = builtins.open(fp, "rb")
     else:
         filename = ""
 

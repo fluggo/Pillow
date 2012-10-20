@@ -19,7 +19,7 @@
 
 __version__ = "0.3"
 
-import Image, ImageFile, ImagePalette
+from . import Image, ImageFile, ImagePalette
 
 
 #
@@ -27,10 +27,10 @@ import Image, ImageFile, ImagePalette
 # Read RGA file
 
 def i16(c):
-    return ord(c[0]) + (ord(c[1])<<8)
+    return c[0] + (c[1] << 8)
 
 def i32(c):
-    return ord(c[0]) + (ord(c[1])<<8) + (ord(c[2])<<16) + (ord(c[3])<<24)
+    return c[0] + (c[1] << 8) + (c[2] << 16) + (c[3] << 24)
 
 
 MODES = {
@@ -45,7 +45,7 @@ MODES = {
 
 
 def _accept(prefix):
-    return prefix[0] == "\0"
+    return prefix[0] == 0
 
 ##
 # Image plugin for Targa files.
@@ -60,14 +60,14 @@ class TgaImageFile(ImageFile.ImageFile):
         # process header
         s = self.fp.read(18)
 
-        id = ord(s[0])
+        id = s[0]
 
-        colormaptype = ord(s[1])
-        imagetype = ord(s[2])
+        colormaptype = s[1]
+        imagetype = s[2]
 
-        depth = ord(s[16])
+        depth = s[16]
 
-        flags = ord(s[17])
+        flags = s[17]
 
         self.size = i16(s[12:]), i16(s[14:])
 
@@ -75,7 +75,7 @@ class TgaImageFile(ImageFile.ImageFile):
         if id != 0 or colormaptype not in (0, 1) or\
            self.size[0] <= 0 or self.size[1] <= 0 or\
            depth not in (1, 8, 16, 24, 32):
-            raise SyntaxError, "not a TGA file"
+            raise SyntaxError("not a TGA file")
 
         # image mode
         if imagetype in (3, 11):
@@ -89,7 +89,7 @@ class TgaImageFile(ImageFile.ImageFile):
             if depth == 32:
                 self.mode = "RGBA"
         else:
-            raise SyntaxError, "unknown TGA mode"
+            raise SyntaxError("unknown TGA mode")
 
         # orientation
         orientation = flags & 0x30
@@ -98,7 +98,7 @@ class TgaImageFile(ImageFile.ImageFile):
         elif not orientation:
             orientation = -1
         else:
-            raise SyntaxError, "unknown TGA orientation"
+            raise SyntaxError("unknown TGA orientation")
 
         self.info["orientation"] = orientation
 
@@ -110,13 +110,13 @@ class TgaImageFile(ImageFile.ImageFile):
             start, size, mapdepth = i16(s[3:]), i16(s[5:]), i16(s[7:])
             if mapdepth == 16:
                 self.palette = ImagePalette.raw("BGR;16",
-                    "\0"*2*start + self.fp.read(2*size))
+                    b"\0"*2*start + self.fp.read(2*size))
             elif mapdepth == 24:
                 self.palette = ImagePalette.raw("BGR",
-                    "\0"*3*start + self.fp.read(3*size))
+                    b"\0"*3*start + self.fp.read(3*size))
             elif mapdepth == 32:
                 self.palette = ImagePalette.raw("BGRA",
-                    "\0"*4*start + self.fp.read(4*size))
+                    b"\0"*4*start + self.fp.read(4*size))
 
         # setup tile descriptor
         try:
@@ -136,10 +136,10 @@ class TgaImageFile(ImageFile.ImageFile):
 # Write TGA file
 
 def o16(i):
-    return chr(i&255) + chr(i>>8&255)
+    return bytes((i&255, i>>8&255))
 
 def o32(i):
-    return chr(i&255) + chr(i>>8&255) + chr(i>>16&255) + chr(i>>24&255)
+    return bytes((i&255, i>>8&255, i>>16&255, i>>24&255))
 
 SAVE = {
     "1": ("1", 1, 0, 3),
@@ -173,18 +173,18 @@ def _save(im, fp, filename, check=0):
     if orientation > 0:
         flags = flags | 0x20
 
-    fp.write("\000" +
-             chr(colormaptype) +
-             chr(imagetype) +
-             o16(colormapfirst) +
-             o16(colormaplength) +
-             chr(colormapentry) +
-             o16(0) +
-             o16(0) +
-             o16(im.size[0]) +
-             o16(im.size[1]) +
-             chr(bits) +
-             chr(flags))
+    fp.write(bytes(0,
+             colormaptype,
+             imagetype,
+             o16(colormapfirst),
+             o16(colormaplength),
+             chr(colormapentry),
+             o16(0),
+             o16(0),
+             o16(im.size[0]),
+             o16(im.size[1]),
+             bits,
+             flags))
 
     if colormaptype:
         fp.write(im.im.getpalette("RGB", "BGR"))

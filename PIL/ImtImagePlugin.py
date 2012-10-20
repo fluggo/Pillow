@@ -19,12 +19,12 @@ __version__ = "0.2"
 
 import re
 
-import Image, ImageFile
+from . import Image, ImageFile
 
 #
 # --------------------------------------------------------------------
 
-field = re.compile(r"([a-z]*) ([^ \r\n]*)")
+field = re.compile(br"([a-z]*) ([^ \r\n]*)")
 
 ##
 # Image plugin for IM Tools images.
@@ -39,8 +39,8 @@ class ImtImageFile(ImageFile.ImageFile):
         # Quick rejection: if there's not a LF among the first
         # 100 bytes, this is (probably) not a text header.
 
-        if not "\n" in self.fp.read(100):
-            raise SyntaxError, "not an IM file"
+        if not b"\n" in self.fp.read(100):
+            raise SyntaxError("not an IM file")
         self.fp.seek(0)
 
         xsize = ysize = 0
@@ -51,7 +51,7 @@ class ImtImageFile(ImageFile.ImageFile):
             if not s:
                 break
 
-            if s == chr(12):
+            if s[0] == 12:
 
                 # image data begins
                 self.tile = [("raw", (0,0)+self.size,

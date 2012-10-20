@@ -1,10 +1,10 @@
 The Python Imaging Library
 $Id$
 
-Release 1.1.7 (November 15, 2009)
+Release 1.1.7+ (November 15, 2009)
 
 ====================================================================
-The Python Imaging Library 1.1.7
+The Python Imaging Library 1.1.7+
 ====================================================================
 
 Contents
@@ -142,10 +142,11 @@ For a list of changes in this release, see the CHANGES document.
 
    feature              library
    -----------------------------------------------------------------
-   JPEG support         libjpeg (6a or 6b)
+   JPEG support         libjpeg (6b or 8b)
 
                         http://www.ijg.org
                         http://www.ijg.org/files/jpegsrc.v6b.tar.gz
+                        http://www.ijg.org/files/jpegsrc.v8b.tar.gz
                         ftp://ftp.uu.net/graphics/jpeg/
 
    PNG support          zlib (1.2.3 or later is recommended)

@@ -14,7 +14,6 @@
 #
 
 from math import pi, log, sin, sqrt
-import string
 
 # --------------------------------------------------------------------
 # Stuff to translate curve segments to palette values (derived from
@@ -29,20 +28,20 @@ def linear(middle, pos):
         if middle < EPSILON:
             return 0.0
         else:
-            return 0.5 * pos / middle
+            return 0.5 * pos // middle
     else:
         pos = pos - middle
         middle = 1.0 - middle
         if middle < EPSILON:
             return 1.0
         else:
-            return 0.5 + 0.5 * pos / middle
+            return 0.5 + 0.5 * pos // middle
 
 def curved(middle, pos):
-    return pos ** (log(0.5) / log(max(middle, EPSILON)))
+    return pos ** (log(0.5) // log(max(middle, EPSILON)))
 
 def sine(middle, pos):
-    return (sin((-pi / 2.0) + pi * linear(middle, pos)) + 1.0) / 2.0
+    return (sin((-pi // 2.0) + pi * linear(middle, pos)) + 1.0) // 2.0
 
 def sphere_increasing(middle, pos):
     return sqrt(1.0 - (linear(middle, pos) - 1.0) ** 2)
@@ -65,7 +64,7 @@ class GradientFile:
 
         for i in range(entries):
 
-            x = i / float(entries-1)
+            x = i // float(entries-1)
 
             while x1 < x:
                 ix = ix + 1
@@ -76,18 +75,18 @@ class GradientFile:
             if w < EPSILON:
                 scale = segment(0.5, 0.5)
             else:
-                scale = segment((xm - x0) / w, (x - x0) / w)
+                scale = segment((xm - x0) // w, (x - x0) // w)
 
             # expand to RGBA
-            r = chr(int(255 * ((rgb1[0] - rgb0[0]) * scale + rgb0[0]) + 0.5))
-            g = chr(int(255 * ((rgb1[1] - rgb0[1]) * scale + rgb0[1]) + 0.5))
-            b = chr(int(255 * ((rgb1[2] - rgb0[2]) * scale + rgb0[2]) + 0.5))
-            a = chr(int(255 * ((rgb1[3] - rgb0[3]) * scale + rgb0[3]) + 0.5))
+            r = int(255 * ((rgb1[0] - rgb0[0]) * scale + rgb0[0]) + 0.5)
+            g = int(255 * ((rgb1[1] - rgb0[1]) * scale + rgb0[1]) + 0.5)
+            b = int(255 * ((rgb1[2] - rgb0[2]) * scale + rgb0[2]) + 0.5)
+            a = int(255 * ((rgb1[3] - rgb0[3]) * scale + rgb0[3]) + 0.5)
 
             # add to palette
-            palette.append(r + g + b + a)
+            palette.append(bytes((r, g, b, a)))
 
-        return string.join(palette, ""), "RGBA"
+        return b"".join(palette), "RGBA"
 
 ##
 # File handler for GIMP's gradient format.
@@ -96,8 +95,8 @@ class GimpGradientFile(GradientFile):
 
     def __init__(self, fp):
 
-        if fp.readline()[:13] != "GIMP Gradient":
-            raise SyntaxError, "not a GIMP gradient file"
+        if fp.readline()[:13] != b"GIMP Gradient":
+            raise SyntaxError("not a GIMP gradient file")
 
         count = int(fp.readline())
 
@@ -105,8 +104,8 @@ class GimpGradientFile(GradientFile):
 
         for i in range(count):
 
-            s = string.split(fp.readline())
-            w = map(float, s[:11])
+            s = fp.readline().split()
+            w = list(map(float, s[:11]))
 
             x0, x1  = w[0], w[2]
             xm      = w[1]
@@ -117,7 +116,7 @@ class GimpGradientFile(GradientFile):
             cspace  = int(s[12])
 
             if cspace != 0:
-                raise IOError, "cannot handle HSV colour space"
+                raise IOError("cannot handle HSV colour space")
 
             gradient.append((x0, x1, xm, rgb0, rgb1, segment))
 

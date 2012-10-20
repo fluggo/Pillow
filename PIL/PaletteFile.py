@@ -13,8 +13,6 @@
 # See the README file for information on usage and redistribution.
 #
 
-import string
-
 ##
 # File handler for Teragon-style palette files.
 
@@ -24,7 +22,7 @@ class PaletteFile:
 
     def __init__(self, fp):
 
-        self.palette = map(lambda i: (i, i, i), range(256))
+        self.palette = [(i, i, i) for i in range(256)]
 
         while 1:
 
@@ -32,12 +30,14 @@ class PaletteFile:
 
             if not s:
                 break
-            if s[0] == "#":
-                continue
-            if len(s) > 100:
-                raise SyntaxError, "bad palette file"
 
-            v = map(int, string.split(s))
+            if s.startswith(b"#"):
+                continue
+
+            if len(s) > 100:
+                raise SyntaxError("bad palette file")
+
+            v = list(map(int, s.split()))
             try:
                 [i, r, g, b] = v
             except ValueError:
@@ -45,9 +45,9 @@ class PaletteFile:
                 g = b = r
 
             if 0 <= i <= 255:
-                self.palette[i] = chr(r) + chr(g) + chr(b)
+                self.palette[i] = bytes((r, g, b))
 
-        self.palette = string.join(self.palette, "")
+        self.palette = b"".join(self.palette)
 
 
     def getpalette(self):

@@ -25,7 +25,8 @@
 # See the README file for information on usage and redistribution.
 #
 
-import Tkinter, Image
+import tkinter
+from . import Image
 
 ##
 # The <b>ImageTk</b> module contains support to create and modify
@@ -45,9 +46,9 @@ def _pilbitmap_check():
     if _pilbitmap_ok is None:
         try:
             im = Image.new("1", (1,1))
-            Tkinter.BitmapImage(data="PIL:%d" % im.im.id)
+            tkinter.BitmapImage(data="PIL:%d" % im.im.id)
             _pilbitmap_ok = 1
-        except Tkinter.TclError:
+        except tkinter.TclError:
             _pilbitmap_ok = 0
     return _pilbitmap_ok
 
@@ -81,11 +82,11 @@ class PhotoImage:
 
         # Tk compatibility: file or data
         if image is None:
-            if kw.has_key("file"):
+            if "file" in kw:
                 image = Image.open(kw["file"])
                 del kw["file"]
-            elif kw.has_key("data"):
-                from StringIO import StringIO
+            elif "data" in kw:
+                from io import StringIO
                 image = Image.open(StringIO(kw["data"]))
                 del kw["data"]
 
@@ -110,7 +111,7 @@ class PhotoImage:
 
         self.__mode = mode
         self.__size = size
-        self.__photo = apply(Tkinter.PhotoImage, (), kw)
+        self.__photo = tkinter.PhotoImage(*(), **kw)
         self.tk = self.__photo.tk
         if image:
             self.paste(image)
@@ -175,7 +176,7 @@ class PhotoImage:
 
         try:
             tk.call("PyImagingPhoto", self.__photo, block.id)
-        except Tkinter.TclError, v:
+        except tkinter.TclError as v:
             # activate Tkinter hook
             try:
                 import _imagingtk
@@ -184,7 +185,7 @@ class PhotoImage:
                 except AttributeError:
                     _imagingtk.tkinit(id(tk), 0)
                 tk.call("PyImagingPhoto", self.__photo, block.id)
-            except (ImportError, AttributeError, Tkinter.TclError):
+            except (ImportError, AttributeError, tkinter.TclError):
                 raise # configuration problem; cannot attach to Tkinter
 
 # --------------------------------------------------------------------
@@ -213,11 +214,11 @@ class BitmapImage:
 
         # Tk compatibility: file or data
         if image is None:
-            if kw.has_key("file"):
+            if "file" in kw:
                 image = Image.open(kw["file"])
                 del kw["file"]
-            elif kw.has_key("data"):
-                from StringIO import StringIO
+            elif "data" in kw:
+                from io import StringIO
                 image = Image.open(StringIO(kw["data"]))
                 del kw["data"]
 
@@ -232,7 +233,7 @@ class BitmapImage:
         else:
             # slow but safe way
             kw["data"] = image.tobitmap()
-        self.__photo = apply(Tkinter.BitmapImage, (), kw)
+        self.__photo = tkinter.BitmapImage(*(), **kw)
 
     def __del__(self):
         name = self.__photo.name
@@ -279,18 +280,18 @@ def getimage(photo):
 
 def _show(image, title):
 
-    class UI(Tkinter.Label):
+    class UI(tkinter.Label):
         def __init__(self, master, im):
             if im.mode == "1":
                 self.image = BitmapImage(im, foreground="white", master=master)
             else:
                 self.image = PhotoImage(im, master=master)
-            Tkinter.Label.__init__(self, master, image=self.image,
+            tkinter.Label.__init__(self, master, image=self.image,
                 bg="black", bd=0)
 
-    if not Tkinter._default_root:
-        raise IOError, "tkinter not initialized"
-    top = Tkinter.Toplevel()
+    if not tkinter._default_root:
+        raise IOError("tkinter not initialized")
+    top = tkinter.Toplevel()
     if title:
         top.title(title)
     UI(top, image).pack()

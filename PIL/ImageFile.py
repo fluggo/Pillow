@@ -27,8 +27,12 @@
 # See the README file for information on usage and redistribution.
 #
 
-import Image
-import traceback, string, os
+import os
+import io
+import string
+import traceback
+
+from . import Image
 
 MAXBLOCK = 65536
 
@@ -55,9 +59,9 @@ def raise_ioerror(error):
 # --------------------------------------------------------------------
 # Helpers
 
-def _tilesort(t1, t2):
+def _tilesort(item):
     # sort on offset
-    return cmp(t1[2], t2[2])
+    return item[2]
 
 #
 # --------------------------------------------------------------------
@@ -89,25 +93,25 @@ class ImageFile(Image.Image):
 
         try:
             self._open()
-        except IndexError, v: # end of data
+        except IndexError as v: # end of data
             if Image.DEBUG > 1:
                 traceback.print_exc()
-            raise SyntaxError, v
-        except TypeError, v: # end of data (ord)
+            raise SyntaxError(v)
+        except TypeError as v: # end of data (ord)
             if Image.DEBUG > 1:
                 traceback.print_exc()
-            raise SyntaxError, v
-        except KeyError, v: # unsupported mode
+            raise SyntaxError(v)
+        except KeyError as v: # unsupported mode
             if Image.DEBUG > 1:
                 traceback.print_exc()
-            raise SyntaxError, v
-        except EOFError, v: # got header but not the first frame
+            raise SyntaxError(v)
+        except EOFError as v: # got header but not the first frame
             if Image.DEBUG > 1:
                 traceback.print_exc()
-            raise SyntaxError, v
+            raise SyntaxError(v)
 
         if not self.mode or self.size[0] <= 0:
-            raise SyntaxError, "not identified by this driver"
+            raise SyntaxError("not identified by this driver")
 
     def draft(self, mode, size):
         "Set draft mode"
@@ -177,13 +181,13 @@ class ImageFile(Image.Image):
         if not self.map:
 
             # sort tiles in file order
-            self.tile.sort(_tilesort)
+            self.tile.sort(key=_tilesort)
 
             try:
                 # FIXME: This is a hack to handle TIFF's JpegTables tag.
                 prefix = self.tile_prefix
             except AttributeError:
-                prefix = ""
+                prefix = b""
 
             for d, e, o, a in self.tile:
                 d = Image._getdecoder(self.mode, d, a, self.decoderconfig)
@@ -226,8 +230,7 @@ class ImageFile(Image.Image):
 
     def load_prepare(self):
         # create image memory if necessary
-        if not self.im or\
-           self.im.mode != self.mode or self.im.size != self.size:
+        if not self.im or self.im.mode != self.mode or self.im.size != self.size:
             self.im = Image.core.new(self.mode, self.size)
         # create palette (optional)
         if self.mode == "P":
@@ -313,13 +316,13 @@ class _ParserFile:
 
     def readline(self):
         # FIXME: this is slow!
-        s = ""
+        s = b""
         while 1:
             c = self.read(1)
             if not c:
                 break
             s = s + c
-            if c == "\n":
+            if c == b"\n":
                 break
         return s
 
@@ -437,7 +440,7 @@ class Parser:
         # finish decoding
         if self.decoder:
             # get rid of what's left in the buffers
-            self.feed("")
+            self.feed(b"")
             self.data = self.decoder = None
             if not self.finished:
                 raise IOError("image was incomplete")
@@ -469,13 +472,13 @@ def _save(im, fp, tile):
     im.load()
     if not hasattr(im, "encoderconfig"):
         im.encoderconfig = ()
-    tile.sort(_tilesort)
+    tile.sort(key=_tilesort)
     # FIXME: make MAXBLOCK a configuration parameter
     bufsize = max(MAXBLOCK, im.size[0] * 4) # see RawEncode.c
     try:
         fh = fp.fileno()
         fp.flush()
-    except AttributeError:
+    except (AttributeError, io.UnsupportedOperation):
         # compress to Python file-compatible object
         for e, b, o, a in tile:
             e = Image._getencoder(im.mode, e, a, im.encoderconfig)
@@ -515,7 +518,7 @@ def _save(im, fp, tile):
 
 def _safe_read(fp, size):
     if size <= 0:
-        return ""
+        return b""
     if size <= SAFEBLOCK:
         return fp.read(size)
     data = []
@@ -525,4 +528,4 @@ def _safe_read(fp, size):
             break
         data.append(block)
         size = size - len(block)
-    return string.join(data, "")
+    return b"".join(data)

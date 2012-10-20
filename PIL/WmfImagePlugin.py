@@ -17,7 +17,7 @@
 
 __version__ = "0.2"
 
-import Image, ImageFile
+from . import Image, ImageFile
 
 _handler = None
 
@@ -41,7 +41,7 @@ if hasattr(Image.core, "drawwmf"):
 
         def load(self, im):
             im.fp.seek(0) # rewind
-            return Image.fromstring(
+            return Image.frombytes(
                 "RGB", im.size,
                 Image.core.drawwmf(im.fp.read(), im.size, self.bbox),
                 "raw", "BGR", (im.size[0]*3 + 3) & -4, -1
@@ -52,18 +52,18 @@ if hasattr(Image.core, "drawwmf"):
 # --------------------------------------------------------------------
 
 def word(c, o=0):
-    return ord(c[o]) + (ord(c[o+1])<<8)
+    return c[o] + (c[o+1] << 8)
 
 def short(c, o=0):
-    v = ord(c[o]) + (ord(c[o+1])<<8)
+    v = c[o] + (c[o+1] <<8)
     if v >= 32768:
         v = v - 65536
     return v
 
 def dword(c, o=0):
-    return ord(c[o]) + (ord(c[o+1])<<8) + (ord(c[o+2])<<16) + (ord(c[o+3])<<24)
+    return c[o] + (c[o+1] << 8) + (c[o+2] << 16) + (c[o+3] << 24)
 
-def long(c, o=0):
+def int(c, o=0):
     return dword(c, o)
 
 #
@@ -72,8 +72,8 @@ def long(c, o=0):
 
 def _accept(prefix):
     return (
-        prefix[:6] == "\xd7\xcd\xc6\x9a\x00\x00" or
-        prefix[:4] == "\x01\x00\x00\x00"
+        prefix[:6] == b"\xd7\xcd\xc6\x9a\x00\x00" or
+        prefix[:4] == b"\x01\x00\x00\x00"
         )
 
 ##
@@ -89,7 +89,7 @@ class WmfStubImageFile(ImageFile.StubImageFile):
         # check placable header
         s = self.fp.read(80)
 
-        if s[:6] == "\xd7\xcd\xc6\x9a\x00\x00":
+        if s[:6] == b"\xd7\xcd\xc6\x9a\x00\x00":
 
             # placeable windows metafile
 
@@ -101,7 +101,7 @@ class WmfStubImageFile(ImageFile.StubImageFile):
             x1 = short(s, 10); y1 = short(s, 12)
 
             # normalize size to 72 dots per inch
-            size = (x1 - x0) * 72 / inch, (y1 - y0) * 72 / inch
+            size = (x1 - x0) * 72 // inch, (y1 - y0) * 72 // inch
 
             self.info["wmf_bbox"] = x0, y0, x1, y1
 
@@ -110,25 +110,25 @@ class WmfStubImageFile(ImageFile.StubImageFile):
             # print self.mode, self.size, self.info
 
             # sanity check (standard metafile header)
-            if s[22:26] != "\x01\x00\t\x00":
+            if s[22:26] != b"\x01\x00\t\x00":
                 raise SyntaxError("Unsupported WMF file format")
 
-        elif long(s) == 1 and s[40:44] == " EMF":
+        elif int(s) == 1 and s[40:44] == b" EMF":
             # enhanced metafile
 
             # get bounding box
-            x0 = long(s, 8); y0 = long(s, 12)
-            x1 = long(s, 16); y1 = long(s, 20)
+            x0 = int(s, 8); y0 = int(s, 12)
+            x1 = int(s, 16); y1 = int(s, 20)
 
             # get frame (in 0.01 millimeter units)
-            frame = long(s, 24), long(s, 28), long(s, 32), long(s, 36)
+            frame = int(s, 24), int(s, 28), int(s, 32), int(s, 36)
 
             # normalize size to 72 dots per inch
             size = x1 - x0, y1 - y0
 
             # calculate dots per inch from bbox and frame
-            xdpi = 2540 * (x1 - y0) / (frame[2] - frame[0])
-            ydpi = 2540 * (y1 - y0) / (frame[3] - frame[1])
+            xdpi = 2540 * (x1 - y0) // (frame[2] - frame[0])
+            ydpi = 2540 * (y1 - y0) // (frame[3] - frame[1])
 
             self.info["wmf_bbox"] = x0, y0, x1, y1
 

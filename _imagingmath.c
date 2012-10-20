@@ -20,6 +20,8 @@
 #include "math.h"
 #include "float.h"
 
+#include "py3.h"
+
 #define MAX_INT32 2147483647.0
 #define MIN_INT32 -2147483648.0
 
@@ -173,8 +175,8 @@ _unop(PyObject* self, PyObject* args)
     Imaging im1;
     void (*unop)(Imaging, Imaging);
 
-    long op, i0, i1;
-    if (!PyArg_ParseTuple(args, "lll", &op, &i0, &i1))
+    Py_ssize_t op, i0, i1;
+    if (!PyArg_ParseTuple(args, "nnn", &op, &i0, &i1))
         return NULL;
 
     out = (Imaging) i0;
@@ -196,8 +198,8 @@ _binop(PyObject* self, PyObject* args)
     Imaging im2;
     void (*binop)(Imaging, Imaging, Imaging);
 
-    long op, i0, i1, i2;
-    if (!PyArg_ParseTuple(args, "llll", &op, &i0, &i1, &i2))
+    Py_ssize_t op, i0, i1, i2;
+    if (!PyArg_ParseTuple(args, "nnnn", &op, &i0, &i1, &i2))
         return NULL;
 
     out = (Imaging) i0;
@@ -221,20 +223,41 @@ static PyMethodDef _functions[] = {
 static void
 install(PyObject *d, char* name, void* value)
 {
-    PyObject *v = PyInt_FromLong((long) value);
+    PyObject *v = PyInt_FromSsize_t((Py_ssize_t) value);
     if (!v || PyDict_SetItemString(d, name, v))
         PyErr_Clear();
     Py_XDECREF(v);
 }
 
-DL_EXPORT(void)
-init_imagingmath(void)
+#ifdef PY3
+
+static struct PyModuleDef _imagingmath_module = {
+    PyModuleDef_HEAD_INIT, /* m_base */
+    "_imagingmath",        /* m_name */
+    NULL,                  /* m_doc */
+    -1,                    /* m_size */
+    _functions,            /* m_methods */
+};
+
+PyMODINIT_FUNC
+PyInit__imagingmath(void)
 {
     PyObject* m;
     PyObject* d;
 
+    m = PyModule_Create(&_imagingmath_module);
+    d = PyModule_GetDict(m);
+
+#else 
+
+DL_EXPORT(void)
+init_imagingmath(void)
+{
+
     m = Py_InitModule("_imagingmath", _functions);
     d = PyModule_GetDict(m);
+
+#endif
 
     install(d, "abs_I", abs_I);
     install(d, "neg_I", neg_I);
@@ -281,4 +304,7 @@ init_imagingmath(void)
     install(d, "gt_F", gt_F);
     install(d, "ge_F", ge_F);
 
+#ifdef PY3
+    return m;
+#endif
 }

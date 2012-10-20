@@ -17,7 +17,7 @@
 # See the README file for information on usage and redistribution.
 #
 
-import Image
+from . import Image
 
 ##
 # The <b>ImageWin</b> module contains support to create and display
@@ -157,7 +157,7 @@ class Dib:
     #     data returned from <b>tostring</b>)
 
     def fromstring(self, buffer):
-        return self.image.fromstring(buffer)
+        return self.image.frombuffer(buffer)
 
     ##
     # Copy display memory contents to string buffer.
@@ -165,7 +165,7 @@ class Dib:
     # @return A string buffer containing display data.
 
     def tostring(self):
-        return self.image.tostring()
+        return self.image.tobuffer()
 
 
 ##
@@ -179,7 +179,7 @@ class Window:
             )
 
     def __dispatcher(self, action, *args):
-        return apply(getattr(self, "ui_handle_" + action), args)
+        return getattr(self, "ui_handle_" + action)(*args)
 
     def ui_handle_clear(self, dc, x0, y0, x1, y1):
         pass

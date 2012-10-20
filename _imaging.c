@@ -1,75 +1,75 @@
 /*
- * The Python Imaging Library.
- *
- * the imaging library bindings
- *
- * history:
- * 1995-09-24 fl   Created
- * 1996-03-24 fl   Ready for first public release (release 0.0)
- * 1996-03-25 fl   Added fromstring (for Jack's "img" library)
- * 1996-03-28 fl   Added channel operations
- * 1996-03-31 fl   Added point operation
- * 1996-04-08 fl   Added new/new_block/new_array factories
- * 1996-04-13 fl   Added decoders
- * 1996-05-04 fl   Added palette hack
- * 1996-05-12 fl   Compile cleanly as C++
- * 1996-05-19 fl   Added matrix conversions, gradient fills
- * 1996-05-27 fl   Added display_mode
- * 1996-07-22 fl   Added getbbox, offset
- * 1996-07-23 fl   Added sequence semantics
- * 1996-08-13 fl   Added logical operators, point mode
- * 1996-08-16 fl   Modified paste interface
- * 1996-09-06 fl   Added putdata methods, use abstract interface
- * 1996-11-01 fl   Added xbm encoder
- * 1996-11-04 fl   Added experimental path stuff, draw_lines, etc
- * 1996-12-10 fl   Added zip decoder, crc32 interface
- * 1996-12-14 fl   Added modulo arithmetics
- * 1996-12-29 fl   Added zip encoder
- * 1997-01-03 fl   Added fli and msp decoders
- * 1997-01-04 fl   Added experimental sun_rle and tga_rle decoders
- * 1997-01-05 fl   Added gif encoder, getpalette hack
- * 1997-02-23 fl   Added histogram mask
- * 1997-05-12 fl   Minor tweaks to match the IFUNC95 interface
- * 1997-05-21 fl   Added noise generator, spread effect
- * 1997-06-05 fl   Added mandelbrot generator
- * 1997-08-02 fl   Modified putpalette to coerce image mode if necessary
- * 1998-01-11 fl   Added INT32 support
- * 1998-01-22 fl   Fixed draw_points to draw the last point too
- * 1998-06-28 fl   Added getpixel, getink, draw_ink
- * 1998-07-12 fl   Added getextrema
- * 1998-07-17 fl   Added point conversion to arbitrary formats
- * 1998-09-21 fl   Added support for resampling filters
- * 1998-09-22 fl   Added support for quad transform
- * 1998-12-29 fl   Added support for arcs, chords, and pieslices
- * 1999-01-10 fl   Added some experimental arrow graphics stuff
- * 1999-02-06 fl   Added draw_bitmap, font acceleration stuff
- * 2001-04-17 fl   Fixed some egcs compiler nits
- * 2001-09-17 fl   Added screen grab primitives (win32)
- * 2002-03-09 fl   Added stretch primitive
- * 2002-03-10 fl   Fixed filter handling in rotate
- * 2002-06-06 fl   Added I, F, and RGB support to putdata
- * 2002-06-08 fl   Added rankfilter
- * 2002-06-09 fl   Added support for user-defined filter kernels
- * 2002-11-19 fl   Added clipboard grab primitives (win32)
- * 2002-12-11 fl   Added draw context
- * 2003-04-26 fl   Tweaks for Python 2.3 beta 1
- * 2003-05-21 fl   Added createwindow primitive (win32)
- * 2003-09-13 fl   Added thread section hooks
- * 2003-09-15 fl   Added expand helper
- * 2003-09-26 fl   Added experimental LA support
- * 2004-02-21 fl   Handle zero-size images in quantize
- * 2004-06-05 fl   Added ptr attribute (used to access Imaging objects)
- * 2004-06-05 fl   Don't crash when fetching pixels from zero-wide images
- * 2004-09-17 fl   Added getcolors
- * 2004-10-04 fl   Added modefilter
- * 2005-10-02 fl   Added access proxy
- * 2006-06-18 fl   Always draw last point in polyline
- *
- * Copyright (c) 1997-2006 by Secret Labs AB 
- * Copyright (c) 1995-2006 by Fredrik Lundh
- *
- * See the README file for information on usage and redistribution.
- */
+* The Python Imaging Library.
+*
+* the imaging library bindings
+*
+* history:
+* 1995-09-24 fl   Created
+* 1996-03-24 fl   Ready for first public release (release 0.0)
+* 1996-03-25 fl   Added fromstring (for Jack's "img" library)
+* 1996-03-28 fl   Added channel operations
+* 1996-03-31 fl   Added point operation
+* 1996-04-08 fl   Added new/new_block/new_array factories
+* 1996-04-13 fl   Added decoders
+* 1996-05-04 fl   Added palette hack
+* 1996-05-12 fl   Compile cleanly as C++
+* 1996-05-19 fl   Added matrix conversions, gradient fills
+* 1996-05-27 fl   Added display_mode
+* 1996-07-22 fl   Added getbbox, offset
+* 1996-07-23 fl   Added sequence semantics
+* 1996-08-13 fl   Added logical operators, point mode
+* 1996-08-16 fl   Modified paste interface
+* 1996-09-06 fl   Added putdata methods, use abstract interface
+* 1996-11-01 fl   Added xbm encoder
+* 1996-11-04 fl   Added experimental path stuff, draw_lines, etc
+* 1996-12-10 fl   Added zip decoder, crc32 interface
+* 1996-12-14 fl   Added modulo arithmetics
+* 1996-12-29 fl   Added zip encoder
+* 1997-01-03 fl   Added fli and msp decoders
+* 1997-01-04 fl   Added experimental sun_rle and tga_rle decoders
+* 1997-01-05 fl   Added gif encoder, getpalette hack
+* 1997-02-23 fl   Added histogram mask
+* 1997-05-12 fl   Minor tweaks to match the IFUNC95 interface
+* 1997-05-21 fl   Added noise generator, spread effect
+* 1997-06-05 fl   Added mandelbrot generator
+* 1997-08-02 fl   Modified putpalette to coerce image mode if necessary
+* 1998-01-11 fl   Added INT32 support
+* 1998-01-22 fl   Fixed draw_points to draw the last point too
+* 1998-06-28 fl   Added getpixel, getink, draw_ink
+* 1998-07-12 fl   Added getextrema
+* 1998-07-17 fl   Added point conversion to arbitrary formats
+* 1998-09-21 fl   Added support for resampling filters
+* 1998-09-22 fl   Added support for quad transform
+* 1998-12-29 fl   Added support for arcs, chords, and pieslices
+* 1999-01-10 fl   Added some experimental arrow graphics stuff
+* 1999-02-06 fl   Added draw_bitmap, font acceleration stuff
+* 2001-04-17 fl   Fixed some egcs compiler nits
+* 2001-09-17 fl   Added screen grab primitives (win32)
+* 2002-03-09 fl   Added stretch primitive
+* 2002-03-10 fl   Fixed filter handling in rotate
+* 2002-06-06 fl   Added I, F, and RGB support to putdata
+* 2002-06-08 fl   Added rankfilter
+* 2002-06-09 fl   Added support for user-defined filter kernels
+* 2002-11-19 fl   Added clipboard grab primitives (win32)
+* 2002-12-11 fl   Added draw context
+* 2003-04-26 fl   Tweaks for Python 2.3 beta 1
+* 2003-05-21 fl   Added createwindow primitive (win32)
+* 2003-09-13 fl   Added thread section hooks
+* 2003-09-15 fl   Added expand helper
+* 2003-09-26 fl   Added experimental LA support
+* 2004-02-21 fl   Handle zero-size images in quantize
+* 2004-06-05 fl   Added ptr attribute (used to access Imaging objects)
+* 2004-06-05 fl   Don't crash when fetching pixels from zero-wide images
+* 2004-09-17 fl   Added getcolors
+* 2004-10-04 fl   Added modefilter
+* 2005-10-02 fl   Added access proxy
+* 2006-06-18 fl   Always draw last point in polyline
+*
+* Copyright (c) 1997-2006 by Secret Labs AB
+* Copyright (c) 1995-2006 by Fredrik Lundh
+*
+* See the README file for information on usage and redistribution.
+*/
 
 
 #include "Python.h"
@@ -95,7 +95,7 @@
 /* PIL Plus extensions */
 #undef  WITH_CRACKCODE /* pil plus */
 
-#undef	VERBOSE
+#undef VERBOSE
 
 #define CLIP(x) ((x) <= 0 ? 0 : (x) < 256 ? (x) : 255)
 
@@ -108,16 +108,23 @@
 #define PyObject_Del PyMem_DEL
 #endif
 
+#if PY_VERSION_HEX < 0x02030000
+#define PyLong_AsUnsignedLongMask PyLong_AsUnsignedLong
+#endif
+
 #if PY_VERSION_HEX < 0x02050000
 #define Py_ssize_t int
+#define lenfunc inquiry
 #define ssizeargfunc intargfunc
 #define ssizessizeargfunc intintargfunc
 #define ssizeobjargproc intobjargproc
 #define ssizessizeobjargproc intintobjargproc
 #endif
 
+#include "py3.h"
+
 /* -------------------------------------------------------------------- */
-/* OBJECT ADMINISTRATION						*/
+/* OBJECT ADMINISTRATION                                                */
 /* -------------------------------------------------------------------- */
 
 typedef struct {
@@ -133,7 +140,7 @@ staticforward PyTypeObject Imaging_Type;
 typedef struct
 {
     /* to write a character, cut out sxy from glyph data, place
-       at current position plus dxy, and advance by (dx, dy) */
+        at current position plus dxy, and advance by (dx, dy) */
     int dx, dy;
     int dx0, dy0, dx1, dy1;
     int sx0, sy0, sx1, sy1;
@@ -169,18 +176,18 @@ typedef struct {
 
 staticforward PyTypeObject PixelAccess_Type;
 
-PyObject* 
+PyObject*
 PyImagingNew(Imaging imOut)
 {
     ImagingObject* imagep;
 
     if (!imOut)
-	return NULL;
+        return NULL;
 
     imagep = PyObject_New(ImagingObject, &Imaging_Type);
     if (imagep == NULL) {
-	ImagingDelete(imOut);
-	return NULL;
+        ImagingDelete(imOut);
+        return NULL;
     }
 
 #ifdef VERBOSE
@@ -189,7 +196,6 @@ PyImagingNew(Imaging imOut)
 
     imagep->image = imOut;
     imagep->access = ImagingAccessNew(imOut);
-
     return (PyObject*) imagep;
 }
 
@@ -202,18 +208,22 @@ _dealloc(ImagingObject* imagep)
 #endif
 
     if (imagep->access)
-      ImagingAccessDelete(imagep->image, imagep->access);
+        ImagingAccessDelete(imagep->image, imagep->access);
     ImagingDelete(imagep->image);
     PyObject_Del(imagep);
 }
 
+#ifdef PY3
+#define PyImaging_Check(op) (Py_TYPE(op) == &Imaging_Type)
+#else
 #define PyImaging_Check(op) ((op)->ob_type == &Imaging_Type)
+#endif
 
 Imaging PyImaging_AsImaging(PyObject *op)
 {
     if (!PyImaging_Check(op)) {
-	PyErr_BadInternalCall();
-	return NULL;
+        PyErr_BadInternalCall();
+        return NULL;
     }
 
     return ((ImagingObject *)op)->image;
@@ -339,7 +349,7 @@ ImagingError_Clear(void)
 }
 
 /* -------------------------------------------------------------------- */
-/* HELPERS								*/
+/* HELPERS                                                              */
 /* -------------------------------------------------------------------- */
 
 static int
@@ -372,14 +382,14 @@ getlist(PyObject* arg, int* length, const char* wrong_length, int type)
     void* list;
 
     if (!PySequence_Check(arg)) {
-	PyErr_SetString(PyExc_TypeError, must_be_sequence);
-	return NULL;
+        PyErr_SetString(PyExc_TypeError, must_be_sequence);
+        return NULL;
     }
 
     n = PyObject_Length(arg);
     if (length && wrong_length && n != *length) {
-	PyErr_SetString(PyExc_ValueError, wrong_length);
-	return NULL;
+        PyErr_SetString(PyExc_ValueError, wrong_length);
+        return NULL;
     }
 
     list = malloc(n * (type & 0xff));
@@ -465,40 +475,40 @@ static inline PyObject*
 getpixel(Imaging im, ImagingAccess access, int x, int y)
 {
     union {
-      UINT8 b[4];
-      INT16 h;
-      INT32 i;
-      FLOAT32 f;
+        UINT8 b[4];
+        INT16 h;
+        INT32 i;
+        FLOAT32 f;
     } pixel;
 
     if (x < 0 || x >= im->xsize || y < 0 || y >= im->ysize) {
-	PyErr_SetString(PyExc_IndexError, outside_image);
-	return NULL;
+        PyErr_SetString(PyExc_IndexError, outside_image);
+        return NULL;
     }
 
     access->get_pixel(im, x, y, &pixel);
 
     switch (im->type) {
     case IMAGING_TYPE_UINT8:
-      switch (im->bands) {
-      case 1:
-        return PyInt_FromLong(pixel.b[0]);
-      case 2:
-        return Py_BuildValue("ii", pixel.b[0], pixel.b[1]);
-      case 3:
-        return Py_BuildValue("iii", pixel.b[0], pixel.b[1], pixel.b[2]);
-      case 4:
-        return Py_BuildValue("iiii", pixel.b[0], pixel.b[1], pixel.b[2], pixel.b[3]);
-      }
-      break;
+        switch (im->bands) {
+        case 1:
+            return PyInt_FromLong(pixel.b[0]);
+        case 2:
+            return Py_BuildValue("ii", pixel.b[0], pixel.b[1]);
+        case 3:
+            return Py_BuildValue("iii", pixel.b[0], pixel.b[1], pixel.b[2]);
+        case 4:
+            return Py_BuildValue("iiii", pixel.b[0], pixel.b[1], pixel.b[2], pixel.b[3]);
+        }
+        break;
     case IMAGING_TYPE_INT32:
-      return PyInt_FromLong(pixel.i);
+        return PyInt_FromLong(pixel.i);
     case IMAGING_TYPE_FLOAT32:
-      return PyFloat_FromDouble(pixel.f);
+        return PyFloat_FromDouble(pixel.f);
     case IMAGING_TYPE_SPECIAL:
-      if (strncmp(im->mode, "I;16", 4) == 0)
-        return PyInt_FromLong(pixel.h);
-      break;
+        if (strncmp(im->mode, "I;16", 4) == 0)
+            return PyInt_FromLong(pixel.h);
+        break;
     }
 
     /* unknown type */
@@ -513,7 +523,7 @@ getink(PyObject* color, Imaging im, char* ink)
     double f;
 
     /* fill ink buffer (four bytes) with something that can
-       be cast to either UINT8 or INT32 */
+        be cast to either UINT8 or INT32 */
 
     switch (im->type) {
     case IMAGING_TYPE_UINT8:
@@ -527,9 +537,12 @@ getink(PyObject* color, Imaging im, char* ink)
             ink[1] = ink[2] = ink[3] = 0;
         } else {
             a = 255;
-            if (PyInt_Check(color)) {
-                r = PyInt_AS_LONG(color);
-                /* compatibility: ABGR */
+            if (PyInt_Check(color) || PyLong_Check(color)) {
+                if (PyInt_Check(color))
+                    r = PyInt_AS_LONG(color);
+                else
+                    r = (int) PyLong_AsUnsignedLongMask(color);
+                /* compatibility: treat integer as packed ABGR */
                 a = (UINT8) (r >> 24);
                 b = (UINT8) (r >> 16);
                 g = (UINT8) (r >> 8);
@@ -581,10 +594,10 @@ getink(PyObject* color, Imaging im, char* ink)
 }
 
 /* -------------------------------------------------------------------- */
-/* FACTORIES								*/
+/* FACTORIES                                                            */
 /* -------------------------------------------------------------------- */
 
-static PyObject* 
+static PyObject*
 _fill(PyObject* self, PyObject* args)
 {
     char* mode;
@@ -592,12 +605,12 @@ _fill(PyObject* self, PyObject* args)
     PyObject* color;
     char buffer[4];
     Imaging im;
-    
+
     xsize = ysize = 256;
     color = NULL;
 
     if (!PyArg_ParseTuple(args, "s|(ii)O", &mode, &xsize, &ysize, &color))
-	return NULL;
+        return NULL;
 
     im = ImagingNew(mode, xsize, ysize);
     if (!im)
@@ -616,107 +629,107 @@ _fill(PyObject* self, PyObject* args)
     return PyImagingNew(im);
 }
 
-static PyObject* 
+static PyObject*
 _new(PyObject* self, PyObject* args)
 {
     char* mode;
     int xsize, ysize;
 
     if (!PyArg_ParseTuple(args, "s(ii)", &mode, &xsize, &ysize))
-	return NULL;
+        return NULL;
 
     return PyImagingNew(ImagingNew(mode, xsize, ysize));
 }
 
-static PyObject* 
+static PyObject*
 _new_array(PyObject* self, PyObject* args)
 {
     char* mode;
     int xsize, ysize;
 
     if (!PyArg_ParseTuple(args, "s(ii)", &mode, &xsize, &ysize))
-	return NULL;
+        return NULL;
 
     return PyImagingNew(ImagingNewArray(mode, xsize, ysize));
 }
 
-static PyObject* 
+static PyObject*
 _new_block(PyObject* self, PyObject* args)
 {
     char* mode;
     int xsize, ysize;
 
     if (!PyArg_ParseTuple(args, "s(ii)", &mode, &xsize, &ysize))
-	return NULL;
+        return NULL;
 
     return PyImagingNew(ImagingNewBlock(mode, xsize, ysize));
 }
 
-static PyObject* 
+static PyObject*
 _getcount(PyObject* self, PyObject* args)
 {
     if (!PyArg_ParseTuple(args, ":getcount"))
-	return NULL;
+        return NULL;
 
     return PyInt_FromLong(ImagingNewCount);
 }
 
-static PyObject* 
+static PyObject*
 _linear_gradient(PyObject* self, PyObject* args)
 {
     char* mode;
 
     if (!PyArg_ParseTuple(args, "s", &mode))
-	return NULL;
+        return NULL;
 
     return PyImagingNew(ImagingFillLinearGradient(mode));
 }
 
-static PyObject* 
+static PyObject*
 _radial_gradient(PyObject* self, PyObject* args)
 {
     char* mode;
 
     if (!PyArg_ParseTuple(args, "s", &mode))
-	return NULL;
+        return NULL;
 
     return PyImagingNew(ImagingFillRadialGradient(mode));
 }
 
-static PyObject* 
+static PyObject*
 _open_ppm(PyObject* self, PyObject* args)
 {
     char* filename;
 
     if (!PyArg_ParseTuple(args, "s", &filename))
-	return NULL;
+        return NULL;
 
     return PyImagingNew(ImagingOpenPPM(filename));
 }
 
-static PyObject* 
+static PyObject*
 _blend(ImagingObject* self, PyObject* args)
 {
     ImagingObject* imagep1;
     ImagingObject* imagep2;
     double alpha;
-    
+
     alpha = 0.5;
     if (!PyArg_ParseTuple(args, "O!O!|d",
-			  &Imaging_Type, &imagep1,
-			  &Imaging_Type, &imagep2,
-			  &alpha))
-	return NULL;
+        &Imaging_Type, &imagep1,
+        &Imaging_Type, &imagep2,
+        &alpha))
+        return NULL;
 
     return PyImagingNew(ImagingBlend(imagep1->image, imagep2->image,
-				     (float) alpha));
+        (float) alpha));
 }
 
 /* -------------------------------------------------------------------- */
-/* METHODS								*/
+/* METHODS                                                              */
 /* -------------------------------------------------------------------- */
 
-static PyObject* 
+static PyObject*
 _convert(ImagingObject* self, PyObject* args)
 {
     char* mode;
@@ -724,31 +737,31 @@ _convert(ImagingObject* self, PyObject* args)
     ImagingObject *paletteimage = NULL;
 
     if (!PyArg_ParseTuple(args, "s|iO", &mode, &dither, &paletteimage))
-	return NULL;
+        return NULL;
     if (paletteimage != NULL) {
-      if (!PyImaging_Check(paletteimage)) {
-	PyObject_Print((PyObject *)paletteimage, stderr, 0);
-	PyErr_SetString(PyExc_ValueError, "palette argument must be image with mode 'P'");
-	return NULL;
-      }
-      if (paletteimage->image->palette == NULL) {
-	PyErr_SetString(PyExc_ValueError, "null palette");
-	return NULL;
-      }
+        if (!PyImaging_Check(paletteimage)) {
+            PyObject_Print((PyObject *)paletteimage, stderr, 0);
+            PyErr_SetString(PyExc_ValueError, "palette argument must be image with mode 'P'");
+            return NULL;
+        }
+        if (paletteimage->image->palette == NULL) {
+            PyErr_SetString(PyExc_ValueError, "null palette");
+            return NULL;
+        }
     }
 
     return PyImagingNew(ImagingConvert(self->image, mode, paletteimage ? paletteimage->image->palette : NULL, dither));
 }
 
-static PyObject* 
+static PyObject*
 _convert2(ImagingObject* self, PyObject* args)
 {
     ImagingObject* imagep1;
     ImagingObject* imagep2;
     if (!PyArg_ParseTuple(args, "O!O!",
-			  &Imaging_Type, &imagep1,
-			  &Imaging_Type, &imagep2))
-	return NULL;
+        &Imaging_Type, &imagep1,
+        &Imaging_Type, &imagep2))
+        return NULL;
 
     if (!ImagingConvert2(imagep1->image, imagep2->image))
         return NULL;
@@ -757,41 +770,41 @@ _convert2(ImagingObject* self, PyObject* args)
     return Py_None;
 }
 
-static PyObject* 
+static PyObject*
 _convert_matrix(ImagingObject* self, PyObject* args)
 {
     char* mode;
     float m[12];
     if (!PyArg_ParseTuple(args, "s(ffff)", &mode, m+0, m+1, m+2, m+3)) {
-	PyErr_Clear();
-	if (!PyArg_ParseTuple(args, "s(ffffffffffff)", &mode,
-			      m+0, m+1, m+2, m+3,
-			      m+4, m+5, m+6, m+7,
-			      m+8, m+9, m+10, m+11))
-	    return NULL;
+        PyErr_Clear();
+        if (!PyArg_ParseTuple(args, "s(ffffffffffff)", &mode,
+            m+0, m+1, m+2, m+3,
+            m+4, m+5, m+6, m+7,
+            m+8, m+9, m+10, m+11))
+        return NULL;
     }
 
     return PyImagingNew(ImagingConvertMatrix(self->image, mode, m));
 }
 
-static PyObject* 
+static PyObject*
 _copy(ImagingObject* self, PyObject* args)
 {
     if (!PyArg_ParseTuple(args, ""))
-	return NULL;
+        return NULL;
 
     return PyImagingNew(ImagingCopy(self->image));
 }
 
-static PyObject* 
+static PyObject*
 _copy2(ImagingObject* self, PyObject* args)
 {
     ImagingObject* imagep1;
     ImagingObject* imagep2;
     if (!PyArg_ParseTuple(args, "O!O!",
-			  &Imaging_Type, &imagep1,
-			  &Imaging_Type, &imagep2))
-	return NULL;
+        &Imaging_Type, &imagep1,
+        &Imaging_Type, &imagep2))
+        return NULL;
 
     if (!ImagingCopy2(imagep1->image, imagep2->image))
         return NULL;
@@ -800,28 +813,28 @@ _copy2(ImagingObject* self, PyObject* args)
     return Py_None;
 }
 
-static PyObject* 
+static PyObject*
 _crop(ImagingObject* self, PyObject* args)
 {
     int x0, y0, x1, y1;
     if (!PyArg_ParseTuple(args, "(iiii)", &x0, &y0, &x1, &y1))
-	return NULL;
+        return NULL;
 
     return PyImagingNew(ImagingCrop(self->image, x0, y0, x1, y1));
 }
 
-static PyObject* 
+static PyObject*
 _expand(ImagingObject* self, PyObject* args)
 {
     int x, y;
     int mode = 0;
     if (!PyArg_ParseTuple(args, "ii|i", &x, &y, &mode))
-	return NULL;
+        return NULL;
 
     return PyImagingNew(ImagingExpand(self->image, x, y, mode));
 }
 
-static PyObject* 
+static PyObject*
 _filter(ImagingObject* self, PyObject* args)
 {
     PyObject* imOut;
@@ -832,9 +845,9 @@ _filter(ImagingObject* self, PyObject* args)
     float divisor, offset;
     PyObject* kernel = NULL;
     if (!PyArg_ParseTuple(args, "(ii)ffO", &xsize, &ysize,
-                         &divisor, &offset, &kernel))
+        &divisor, &offset, &kernel))
         return NULL;
-    
+
     /* get user-defined kernel */
     kerneldata = getlist(kernel, &kernelsize, NULL, TYPE_FLOAT32);
     if (!kerneldata)
@@ -854,7 +867,7 @@ _filter(ImagingObject* self, PyObject* args)
 }
 
 #ifdef WITH_UNSHARPMASK
-static PyObject* 
+static PyObject*
 _gaussian_blur(ImagingObject* self, PyObject* args)
 {
     Imaging imIn;
@@ -876,7 +889,7 @@ _gaussian_blur(ImagingObject* self, PyObject* args)
 }
 #endif
 
-static PyObject* 
+static PyObject*
 _getpalette(ImagingObject* self, PyObject* args)
 {
     PyObject* palette;
@@ -887,25 +900,25 @@ _getpalette(ImagingObject* self, PyObject* args)
     char* mode = "RGB";
     char* rawmode = "RGB";
     if (!PyArg_ParseTuple(args, "|ss", &mode, &rawmode))
-	return NULL;
+        return NULL;
 
     if (!self->image->palette) {
-	PyErr_SetString(PyExc_ValueError, no_palette);
-	return NULL;
+        PyErr_SetString(PyExc_ValueError, no_palette);
+        return NULL;
     }
 
     pack = ImagingFindPacker(mode, rawmode, &bits);
     if (!pack) {
-	PyErr_SetString(PyExc_ValueError, wrong_raw_mode);
-	return NULL;
+        PyErr_SetString(PyExc_ValueError, wrong_raw_mode);
+        return NULL;
     }
 
     palette = PyString_FromStringAndSize(NULL, palettesize * bits / 8);
     if (!palette)
-	return NULL;
+        return NULL;
 
     pack((UINT8*) PyString_AsString(palette),
-	 self->image->palette->palette, palettesize);
+        self->image->palette->palette, palettesize);
 
     return palette;
 }
@@ -917,7 +930,7 @@ _getxy(PyObject* xy, int* x, int *y)
 
     if (!PyTuple_Check(xy) || PyTuple_GET_SIZE(xy) != 2)
         goto badarg;
-        
+
     value = PyTuple_GET_ITEM(xy, 0);
     if (PyInt_Check(value))
         *x = PyInt_AS_LONG(value);
@@ -936,22 +949,22 @@ _getxy(PyObject* xy, int* x, int *y)
 
     return 0;
 
-  badarg:
-    PyErr_SetString(
-        PyExc_TypeError,
-        "argument must be sequence of length 2"
-        );
-    return -1;
+    badarg:
+        PyErr_SetString(
+            PyExc_TypeError,
+            "argument must be sequence of length 2"
+            );
+        return -1;
 
-  badval:
-    PyErr_SetString(
-        PyExc_TypeError,
-        "an integer is required"
-        );
-    return -1;
+    badval:
+        PyErr_SetString(
+            PyExc_TypeError,
+            "an integer is required"
+            );
+        return -1;
 }
 
-static PyObject* 
+static PyObject*
 _getpixel(ImagingObject* self, PyObject* args)
 {
     PyObject* xy;
@@ -996,7 +1009,7 @@ _histogram(ImagingObject* self, PyObject* args)
     PyObject* extremap = NULL;
     ImagingObject* maskp = NULL;
     if (!PyArg_ParseTuple(args, "|OO!", &extremap, &Imaging_Type, &maskp))
-	return NULL;
+        return NULL;
 
     if (extremap) {
         ep = &extrema;
@@ -1030,19 +1043,19 @@ _histogram(ImagingObject* self, PyObject* args)
     h = ImagingGetHistogram(self->image, (maskp) ? maskp->image : NULL, ep);
 
     if (!h)
-	return NULL;
+        return NULL;
 
     /* Build an integer list containing the histogram */
     list = PyList_New(h->bands * 256);
     for (i = 0; i < h->bands * 256; i++) {
-	PyObject* item;
-	item = PyInt_FromLong(h->histogram[i]);
-	if (item == NULL) {
-	    Py_DECREF(list);
-	    list = NULL;
-	    break;
-	}
-	PyList_SetItem(list, i, item);
+        PyObject* item;
+        item = PyInt_FromLong(h->histogram[i]);
+        if (item == NULL) {
+            Py_DECREF(list);
+            list = NULL;
+            break;
+        }
+        PyList_SetItem(list, i, item);
     }
 
     ImagingHistogramDelete(h);
@@ -1051,28 +1064,28 @@ _histogram(ImagingObject* self, PyObject* args)
 }
 
 #ifdef WITH_MODEFILTER
-static PyObject* 
+static PyObject*
 _modefilter(ImagingObject* self, PyObject* args)
 {
     int size;
     if (!PyArg_ParseTuple(args, "i", &size))
-	return NULL;
+        return NULL;
 
     return PyImagingNew(ImagingModeFilter(self->image, size));
 }
 #endif
 
-static PyObject* 
+static PyObject*
 _offset(ImagingObject* self, PyObject* args)
 {
     int xoffset, yoffset;
     if (!PyArg_ParseTuple(args, "ii", &xoffset, &yoffset))
-	return NULL;
+        return NULL;
 
     return PyImagingNew(ImagingOffset(self->image, xoffset, yoffset));
 }
 
-static PyObject* 
+static PyObject*
 _paste(ImagingObject* self, PyObject* args)
 {
     int status;
@@ -1082,10 +1095,10 @@ _paste(ImagingObject* self, PyObject* args)
     int x0, y0, x1, y1;
     ImagingObject* maskp = NULL;
     if (!PyArg_ParseTuple(args, "O(iiii)|O!",
-			  &source,
-			  &x0, &y0, &x1, &y1,
-			  &Imaging_Type, &maskp))
-	return NULL;
+        &source,
+        &x0, &y0, &x1, &y1,
+        &Imaging_Type, &maskp))
+        return NULL;
 
     if (PyImaging_Check(source))
         status = ImagingPaste(
@@ -1123,7 +1136,7 @@ _point(ImagingObject* self, PyObject* args)
     PyObject* list;
     char* mode;
     if (!PyArg_ParseTuple(args, "Oz", &list, &mode))
-	return NULL;
+        return NULL;
 
     if (mode && !strcmp(mode, "F")) {
         FLOAT32* data;
@@ -1194,7 +1207,7 @@ _point_transform(ImagingObject* self, PyObject* args)
     double scale = 1.0;
     double offset = 0.0;
     if (!PyArg_ParseTuple(args, "|dd", &scale, &offset))
-	return NULL;
+        return NULL;
 
     return PyImagingNew(ImagingPointTransform(self->image, scale, offset));
 }
@@ -1209,19 +1222,19 @@ _putdata(ImagingObject* self, PyObject* args)
     double scale = 1.0;
     double offset = 0.0;
     if (!PyArg_ParseTuple(args, "O|dd", &data, &scale, &offset))
-	return NULL;
+        return NULL;
 
     if (!PySequence_Check(data)) {
-	PyErr_SetString(PyExc_TypeError, must_be_sequence);
-	return NULL;
+        PyErr_SetString(PyExc_TypeError, must_be_sequence);
+        return NULL;
     }
 
     image = self->image;
 
     n = PyObject_Length(data);
     if (n > (int) (image->xsize * image->ysize)) {
-	PyErr_SetString(PyExc_TypeError, "too many data entries");
-	return NULL;
+        PyErr_SetString(PyExc_TypeError, "too many data entries");
+        return NULL;
     }
 
     if (image->image8) {
@@ -1236,7 +1249,7 @@ _putdata(ImagingObject* self, PyObject* args)
                         x = image->xsize;
                     memcpy(image->image8[y], p+i, x);
                 }
-            else 
+            else
                 /* Scaled and clipped string data */
                 for (i = x = y = 0; i < n; i++) {
                     image->image8[y][x] = CLIP((int) (p[i] * scale + offset));
@@ -1336,14 +1349,14 @@ _putdata(ImagingObject* self, PyObject* args)
 #ifdef WITH_QUANTIZE
 
 #include "Quant.h"
-static PyObject* 
+static PyObject*
 _quantize(ImagingObject* self, PyObject* args)
 {
     int colours = 256;
     int method = 0;
     int kmeans = 0;
     if (!PyArg_ParseTuple(args, "|iii", &colours, &method, &kmeans))
-	return NULL;
+        return NULL;
 
     if (!self->image->xsize || !self->image->ysize) {
         /* no content; return an empty image */
@@ -1356,7 +1369,7 @@ _quantize(ImagingObject* self, PyObject* args)
 }
 #endif
 
-static PyObject* 
+static PyObject*
 _putpalette(ImagingObject* self, PyObject* args)
 {
     ImagingShuffler unpack;
@@ -1365,18 +1378,22 @@ _putpalette(ImagingObject* self, PyObject* args)
     char* rawmode;
     UINT8* palette;
     int palettesize;
+#ifdef PY3
+    if (!PyArg_ParseTuple(args, "sy#", &rawmode, &palette, &palettesize))
+#else
     if (!PyArg_ParseTuple(args, "ss#", &rawmode, &palette, &palettesize))
-	return NULL;
+#endif
+        return NULL;
 
     if (strcmp(self->image->mode, "L") != 0 && strcmp(self->image->mode, "P")) {
-	PyErr_SetString(PyExc_ValueError, wrong_mode);
-	return NULL;
+        PyErr_SetString(PyExc_ValueError, wrong_mode);
+        return NULL;
     }
 
     unpack = ImagingFindUnpacker("RGB", rawmode, &bits);
     if (!unpack) {
-	PyErr_SetString(PyExc_ValueError, wrong_raw_mode);
-	return NULL;
+        PyErr_SetString(PyExc_ValueError, wrong_raw_mode);
+        return NULL;
     }
 
     ImagingPaletteDelete(self->image->palette);
@@ -1391,22 +1408,22 @@ _putpalette(ImagingObject* self, PyObject* args)
     return Py_None;
 }
 
-static PyObject* 
+static PyObject*
 _putpalettealpha(ImagingObject* self, PyObject* args)
 {
     int index;
     int alpha = 0;
     if (!PyArg_ParseTuple(args, "i|i", &index, &alpha))
-	return NULL;
+        return NULL;
 
     if (!self->image->palette) {
-	PyErr_SetString(PyExc_ValueError, no_palette);
-	return NULL;
+        PyErr_SetString(PyExc_ValueError, no_palette);
+        return NULL;
     }
 
     if (index < 0 || index >= 256) {
-	PyErr_SetString(PyExc_ValueError, outside_palette);
-	return NULL;
+        PyErr_SetString(PyExc_ValueError, outside_palette);
+        return NULL;
     }
 
     strcpy(self->image->palette->mode, "RGBA");
@@ -1416,7 +1433,7 @@ _putpalettealpha(ImagingObject* self, PyObject* args)
     return Py_None;
 }
 
-static PyObject* 
+static PyObject*
 _putpixel(ImagingObject* self, PyObject* args)
 {
     Imaging im;
@@ -1425,13 +1442,13 @@ _putpixel(ImagingObject* self, PyObject* args)
     int x, y;
     PyObject* color;
     if (!PyArg_ParseTuple(args, "(ii)O", &x, &y, &color))
-	return NULL;
+        return NULL;
 
     im = self->image;
-    
+
     if (x < 0 || x >= im->xsize || y < 0 || y >= im->ysize) {
-	PyErr_SetString(PyExc_IndexError, outside_image);
-	return NULL;
+        PyErr_SetString(PyExc_IndexError, outside_image);
+        return NULL;
     }
 
     if (!getink(color, im, ink))
@@ -1445,18 +1462,18 @@ _putpixel(ImagingObject* self, PyObject* args)
 }
 
 #ifdef WITH_RANKFILTER
-static PyObject* 
+static PyObject*
 _rankfilter(ImagingObject* self, PyObject* args)
 {
     int size, rank;
     if (!PyArg_ParseTuple(args, "ii", &size, &rank))
-	return NULL;
+        return NULL;
 
     return PyImagingNew(ImagingRankFilter(self->image, size, rank));
 }
 #endif
 
-static PyObject* 
+static PyObject*
 _resize(ImagingObject* self, PyObject* args)
 {
     Imaging imIn;
@@ -1465,38 +1482,38 @@ _resize(ImagingObject* self, PyObject* args)
     int xsize, ysize;
     int filter = IMAGING_TRANSFORM_NEAREST;
     if (!PyArg_ParseTuple(args, "(ii)|i", &xsize, &ysize, &filter))
-	return NULL;
+        return NULL;
 
     imIn = self->image;
 
     imOut = ImagingNew(imIn->mode, xsize, ysize);
     if (imOut)
-	(void) ImagingResize(imOut, imIn, filter);
-    
+        (void) ImagingResize(imOut, imIn, filter);
+
     return PyImagingNew(imOut);
 }
 
-static PyObject* 
+static PyObject*
 _rotate(ImagingObject* self, PyObject* args)
 {
     Imaging imOut;
     Imaging imIn;
-    
+
     double theta;
     int filter = IMAGING_TRANSFORM_NEAREST;
     if (!PyArg_ParseTuple(args, "d|i", &theta, &filter))
-	return NULL;
+        return NULL;
 
     imIn = self->image;
 
     theta = fmod(theta, 360.0);
     if (theta < 0.0)
-	theta += 360;
+        theta += 360;
 
     if (filter && imIn->type != IMAGING_TYPE_SPECIAL) {
         /* Rotate with resampling filter */
         imOut = ImagingNew(imIn->mode, imIn->xsize, imIn->ysize);
-	(void) ImagingRotate(imOut, imIn, theta, filter);
+       (void) ImagingRotate(imOut, imIn, theta, filter);
     } else if (theta == 90.0 || theta == 270.0) {
         /* Use fast version */
         imOut = ImagingNew(imIn->mode, imIn->ysize, imIn->xsize);
@@ -1527,7 +1544,7 @@ _rotate(ImagingObject* self, PyObject* args)
 #define IS_RGB(mode)\
     (!strcmp(mode, "RGB") || !strcmp(mode, "RGBA") || !strcmp(mode, "RGBX"))
 
-static PyObject* 
+static PyObject*
 im_setmode(ImagingObject* self, PyObject* args)
 {
     /* attempt to modify the mode of an image in place */
@@ -1537,7 +1554,7 @@ im_setmode(ImagingObject* self, PyObject* args)
     char* mode;
     int modelen;
     if (!PyArg_ParseTuple(args, "s#:setmode", &mode, &modelen))
-	return NULL;
+        return NULL;
 
     im = self->image;
 
@@ -1565,7 +1582,7 @@ im_setmode(ImagingObject* self, PyObject* args)
     return Py_None;
 }
 
-static PyObject* 
+static PyObject*
 _stretch(ImagingObject* self, PyObject* args)
 {
     Imaging imIn;
@@ -1575,14 +1592,14 @@ _stretch(ImagingObject* self, PyObject* args)
     int xsize, ysize;
     int filter = IMAGING_TRANSFORM_NEAREST;
     if (!PyArg_ParseTuple(args, "(ii)|i", &xsize, &ysize, &filter))
-	return NULL;
+        return NULL;
 
     imIn = self->image;
 
     /* two-pass resize: minimize size of intermediate image */
     if (imIn->xsize * ysize < xsize * imIn->ysize)
         imTemp = ImagingNew(imIn->mode, imIn->xsize, ysize);
-    else 
+    else
         imTemp = ImagingNew(imIn->mode, xsize, imIn->ysize);
     if (!imTemp)
         return NULL;
@@ -1607,11 +1624,11 @@ _stretch(ImagingObject* self, PyObject* args)
     }
 
     ImagingDelete(imTemp);
-    
+
     return PyImagingNew(imOut);
 }
 
-static PyObject* 
+static PyObject*
 _transform2(ImagingObject* self, PyObject* args)
 {
     static const char* wrong_number = "wrong number of matrix entries";
@@ -1628,11 +1645,11 @@ _transform2(ImagingObject* self, PyObject* args)
     int filter = IMAGING_TRANSFORM_NEAREST;
     int fill = 1;
     if (!PyArg_ParseTuple(args, "(iiii)O!iO|ii",
-                          &x0, &y0, &x1, &y1,
-			  &Imaging_Type, &imagep,
-                          &method, &data,
-                          &filter, &fill))
-	return NULL;
+        &x0, &y0, &x1, &y1,
+    &Imaging_Type, &imagep,
+        &method, &data,
+        &filter, &fill))
+    return NULL;
 
     switch (method) {
     case IMAGING_TRANSFORM_AFFINE:
@@ -1686,7 +1703,7 @@ _transform2(ImagingObject* self, PyObject* args)
     return Py_None;
 }
 
-static PyObject* 
+static PyObject*
 _transpose(ImagingObject* self, PyObject* args)
 {
     Imaging imIn;
@@ -1694,10 +1711,10 @@ _transpose(ImagingObject* self, PyObject* args)
 
     int op;
     if (!PyArg_ParseTuple(args, "i", &op))
-	return NULL;
+        return NULL;
 
     imIn = self->image;
-    
+
     switch (op) {
     case 0: /* flip left right */
     case 1: /* flip top bottom */
@@ -1736,7 +1753,7 @@ _transpose(ImagingObject* self, PyObject* args)
 }
 
 #ifdef WITH_UNSHARPMASK
-static PyObject* 
+static PyObject*
 _unsharp_mask(ImagingObject* self, PyObject* args)
 {
     Imaging imIn;
@@ -1762,25 +1779,25 @@ _unsharp_mask(ImagingObject* self, PyObject* args)
 
 /* -------------------------------------------------------------------- */
 
-static PyObject* 
+static PyObject*
 _isblock(ImagingObject* self, PyObject* args)
 {
-    return PyInt_FromLong((long) self->image->block);
+    return PyInt_FromSsize_t((Py_ssize_t) self->image->block);
 }
 
-static PyObject* 
+static PyObject*
 _getbbox(ImagingObject* self, PyObject* args)
 {
     int bbox[4];
     if (!ImagingGetBBox(self->image, bbox)) {
-	Py_INCREF(Py_None);
-	return Py_None;
+        Py_INCREF(Py_None);
+        return Py_None;
     }
 
     return Py_BuildValue("iiii", bbox[0], bbox[1], bbox[2], bbox[3]);
 }
 
-static PyObject* 
+static PyObject*
 _getcolors(ImagingObject* self, PyObject* args)
 {
     ImagingColorItem* items;
@@ -1789,7 +1806,7 @@ _getcolors(ImagingObject* self, PyObject* args)
 
     int maxcolors = 256;
     if (!PyArg_ParseTuple(args, "i:getcolors", &maxcolors))
-	return NULL;
+        return NULL;
 
     items = ImagingGetColors(self->image, maxcolors, &colors);
     if (!items)
@@ -1814,7 +1831,7 @@ _getcolors(ImagingObject* self, PyObject* args)
     return out;
 }
 
-static PyObject* 
+static PyObject*
 _getextrema(ImagingObject* self, PyObject* args)
 {
     union {
@@ -1823,7 +1840,7 @@ _getextrema(ImagingObject* self, PyObject* args)
         FLOAT32 f[2];
     } extrema;
     int status;
-    
+
     status = ImagingGetExtrema(self->image, &extrema);
     if (status < 0)
         return NULL;
@@ -1842,7 +1859,7 @@ _getextrema(ImagingObject* self, PyObject* args)
     return Py_None;
 }
 
-static PyObject* 
+static PyObject*
 _getprojection(ImagingObject* self, PyObject* args)
 {
     unsigned char* xprofile;
@@ -1853,15 +1870,15 @@ _getprojection(ImagingObject* self, PyObject* args)
     yprofile = malloc(self->image->ysize);
 
     if (xprofile == NULL || yprofile == NULL) {
-	free(xprofile);
-	free(yprofile);
-	return PyErr_NoMemory();
+        free(xprofile);
+        free(yprofile);
+        return PyErr_NoMemory();
     }
 
     ImagingGetProjection(self->image, (unsigned char *)xprofile, (unsigned char *)yprofile);
 
     result = Py_BuildValue("s#s#", xprofile, self->image->xsize,
-			   yprofile, self->image->ysize);
+        yprofile, self->image->ysize);
 
     free(xprofile);
     free(yprofile);
@@ -1871,45 +1888,45 @@ _getprojection(ImagingObject* self, PyObject* args)
 
 /* -------------------------------------------------------------------- */
 
-static PyObject* 
+static PyObject*
 _getband(ImagingObject* self, PyObject* args)
 {
     int band;
 
     if (!PyArg_ParseTuple(args, "i", &band))
-	return NULL;
+        return NULL;
 
     return PyImagingNew(ImagingGetBand(self->image, band));
 }
 
-static PyObject* 
+static PyObject*
 _fillband(ImagingObject* self, PyObject* args)
 {
     int band;
     int color;
 
     if (!PyArg_ParseTuple(args, "ii", &band, &color))
-	return NULL;
+        return NULL;
 
     if (!ImagingFillBand(self->image, band, color))
         return NULL;
-    
+
     Py_INCREF(Py_None);
     return Py_None;
 }
 
-static PyObject* 
+static PyObject*
 _putband(ImagingObject* self, PyObject* args)
 {
     ImagingObject* imagep;
     int band;
     if (!PyArg_ParseTuple(args, "O!i",
-			  &Imaging_Type, &imagep,
-			  &band))
-	return NULL;
+        &Imaging_Type, &imagep,
+        &band))
+        return NULL;
 
     if (!ImagingPutBand(self->image, imagep->image, band))
-	return NULL;
+        return NULL;
 
     Py_INCREF(Py_None);
     return Py_None;
@@ -1919,68 +1936,68 @@ _putband(ImagingObject* self, PyObject* args)
 
 #ifdef WITH_IMAGECHOPS
 
-static PyObject* 
+static PyObject*
 _chop_invert(ImagingObject* self, PyObject* args)
 {
     return PyImagingNew(ImagingNegative(self->image));
 }
 
-static PyObject* 
+static PyObject*
 _chop_lighter(ImagingObject* self, PyObject* args)
 {
     ImagingObject* imagep;
 
     if (!PyArg_ParseTuple(args, "O!", &Imaging_Type, &imagep))
-	return NULL;
+        return NULL;
 
     return PyImagingNew(ImagingChopLighter(self->image, imagep->image));
 }
 
-static PyObject* 
+static PyObject*
 _chop_darker(ImagingObject* self, PyObject* args)
 {
     ImagingObject* imagep;
 
     if (!PyArg_ParseTuple(args, "O!", &Imaging_Type, &imagep))
-	return NULL;
+        return NULL;
 
     return PyImagingNew(ImagingChopDarker(self->image, imagep->image));
 }
 
-static PyObject* 
+static PyObject*
 _chop_difference(ImagingObject* self, PyObject* args)
 {
     ImagingObject* imagep;
 
     if (!PyArg_ParseTuple(args, "O!", &Imaging_Type, &imagep))
-	return NULL;
+        return NULL;
 
     return PyImagingNew(ImagingChopDifference(self->image, imagep->image));
 }
 
-static PyObject* 
+static PyObject*
 _chop_multiply(ImagingObject* self, PyObject* args)
 {
     ImagingObject* imagep;
 
     if (!PyArg_ParseTuple(args, "O!", &Imaging_Type, &imagep))
-	return NULL;
+        return NULL;
 
     return PyImagingNew(ImagingChopMultiply(self->image, imagep->image));
 }
 
-static PyObject* 
+static PyObject*
 _chop_screen(ImagingObject* self, PyObject* args)
 {
     ImagingObject* imagep;
 
     if (!PyArg_ParseTuple(args, "O!", &Imaging_Type, &imagep))
-	return NULL;
+        return NULL;
 
     return PyImagingNew(ImagingChopScreen(self->image, imagep->image));
 }
 
-static PyObject* 
+static PyObject*
 _chop_add(ImagingObject* self, PyObject* args)
 {
     ImagingObject* imagep;
@@ -1991,14 +2008,14 @@ _chop_add(ImagingObject* self, PyObject* args)
     offset = 0;
 
     if (!PyArg_ParseTuple(args, "O!|fi", &Imaging_Type, &imagep,
-			  &scale, &offset))
-	return NULL;
+        &scale, &offset))
+    return NULL;
 
     return PyImagingNew(ImagingChopAdd(self->image, imagep->image,
-				       scale, offset));
+        scale, offset));
 }
 
-static PyObject* 
+static PyObject*
 _chop_subtract(ImagingObject* self, PyObject* args)
 {
     ImagingObject* imagep;
@@ -2009,64 +2026,64 @@ _chop_subtract(ImagingObject* self, PyObject* args)
     offset = 0;
 
     if (!PyArg_ParseTuple(args, "O!|fi", &Imaging_Type, &imagep,
-			  &scale, &offset))
-	return NULL;
+        &scale, &offset))
+        return NULL;
 
     return PyImagingNew(ImagingChopSubtract(self->image, imagep->image,
-					    scale, offset));
+        scale, offset));
 }
 
-static PyObject* 
+static PyObject*
 _chop_and(ImagingObject* self, PyObject* args)
 {
     ImagingObject* imagep;
 
     if (!PyArg_ParseTuple(args, "O!", &Imaging_Type, &imagep))
-	return NULL;
+        return NULL;
 
     return PyImagingNew(ImagingChopAnd(self->image, imagep->image));
 }
 
-static PyObject* 
+static PyObject*
 _chop_or(ImagingObject* self, PyObject* args)
 {
     ImagingObject* imagep;
 
     if (!PyArg_ParseTuple(args, "O!", &Imaging_Type, &imagep))
-	return NULL;
+        return NULL;
 
     return PyImagingNew(ImagingChopOr(self->image, imagep->image));
 }
 
-static PyObject* 
+static PyObject*
 _chop_xor(ImagingObject* self, PyObject* args)
 {
     ImagingObject* imagep;
 
     if (!PyArg_ParseTuple(args, "O!", &Imaging_Type, &imagep))
-	return NULL;
+        return NULL;
 
     return PyImagingNew(ImagingChopXor(self->image, imagep->image));
 }
 
-static PyObject* 
+static PyObject*
 _chop_add_modulo(ImagingObject* self, PyObject* args)
 {
     ImagingObject* imagep;
 
     if (!PyArg_ParseTuple(args, "O!", &Imaging_Type, &imagep))
-	return NULL;
+        return NULL;
 
     return PyImagingNew(ImagingChopAddModulo(self->image, imagep->image));
 }
 
-static PyObject* 
+static PyObject*
 _chop_subtract_modulo(ImagingObject* self, PyObject* args)
 {
     ImagingObject* imagep;
 
     if (!PyArg_ParseTuple(args, "O!", &Imaging_Type, &imagep))
-	return NULL;
+        return NULL;
 
     return PyImagingNew(ImagingChopSubtractModulo(self->image, imagep->image));
 }
@@ -2089,18 +2106,18 @@ _font_new(PyObject* self_, PyObject* args)
     unsigned char* glyphdata;
     int glyphdata_length;
     if (!PyArg_ParseTuple(args, "O!s#",
-			  &Imaging_Type, &imagep,
-			  &glyphdata, &glyphdata_length))
-        return NULL;
+        &Imaging_Type, &imagep,
+        &glyphdata, &glyphdata_length))
+    return NULL;
 
     if (glyphdata_length != 256 * 20) {
-	PyErr_SetString(PyExc_ValueError, wrong_length);
-	return NULL;
+    PyErr_SetString(PyExc_ValueError, wrong_length);
+    return NULL;
     }
 
     self = PyObject_New(ImagingFontObject, &ImagingFont_Type);
     if (self == NULL)
-	return NULL;
+    return NULL;
 
     /* glyph bitmap */
     self->bitmap = imagep->image;
@@ -2197,9 +2214,9 @@ _font_getmask(ImagingFontObject* self, PyObject* args)
 
     return PyImagingNew(im);
 
-  failed:
-    ImagingDelete(im);
-    return NULL;
+    failed:
+        ImagingDelete(im);
+        return NULL;
 }
 
 static PyObject*
@@ -2218,11 +2235,13 @@ static struct PyMethodDef _font_methods[] = {
     {NULL, NULL} /* sentinel */
 };
 
-static PyObject*  
+#ifndef PY3
+static PyObject*
 _font_getattr(ImagingFontObject* self, char* name)
 {
     return Py_FindMethod(_font_methods, (PyObject*) self, name);
 }
+#endif
 
 /* -------------------------------------------------------------------- */
 
@@ -2238,7 +2257,7 @@ _draw_new(PyObject* self_, PyObject* args)
 
     self = PyObject_New(ImagingDrawObject, &ImagingDraw_Type);
     if (self == NULL)
-	return NULL;
+        return NULL;
 
     /* keep a reference to the image object */
     Py_INCREF(imagep);
@@ -2260,7 +2279,7 @@ _draw_dealloc(ImagingDrawObject* self)
 
 extern int PyPath_Flatten(PyObject* data, double **xy);
 
-static PyObject* 
+static PyObject*
 _draw_ink(ImagingDrawObject* self, PyObject* args)
 {
     INT32 ink = 0;
@@ -2275,7 +2294,7 @@ _draw_ink(ImagingDrawObject* self, PyObject* args)
     return PyInt_FromLong((int) ink);
 }
 
-static PyObject* 
+static PyObject*
 _draw_arc(ImagingDrawObject* self, PyObject* args)
 {
     int x0, y0, x1, y1;
@@ -2283,19 +2302,19 @@ _draw_arc(ImagingDrawObject* self, PyObject* args)
     int start, end;
     int op = 0;
     if (!PyArg_ParseTuple(args, "(iiii)iii|i",
-                          &x0, &y0, &x1, &y1,
-                          &start, &end, &ink))
-	return NULL;
+        &x0, &y0, &x1, &y1,
+        &start, &end, &ink))
+        return NULL;
 
     if (ImagingDrawArc(self->image->image, x0, y0, x1, y1, start, end,
-                       &ink, op) < 0)
+        &ink, op) < 0)
         return NULL;
 
     Py_INCREF(Py_None);
     return Py_None;
 }
 
-static PyObject* 
+static PyObject*
 _draw_bitmap(ImagingDrawObject* self, PyObject* args)
 {
     double *xy;
@@ -2305,17 +2324,17 @@ _draw_bitmap(ImagingDrawObject* self, PyObject* args)
     ImagingObject* bitmap;
     int ink;
     if (!PyArg_ParseTuple(args, "OO!i", &data, &Imaging_Type, &bitmap, &ink))
-	return NULL;
+        return NULL;
 
     n = PyPath_Flatten(data, &xy);
     if (n < 0)
-	return NULL;
+        return NULL;
     if (n != 1) {
-	PyErr_SetString(
+        PyErr_SetString(
             PyExc_TypeError,
             "coordinate list must contain exactly 1 coordinate"
             );
-	return NULL;
+        return NULL;
     }
 
     n = ImagingDrawBitmap(
@@ -2332,25 +2351,25 @@ _draw_bitmap(ImagingDrawObject* self, PyObject* args)
     return Py_None;
 }
 
-static PyObject* 
+static PyObject*
 _draw_chord(ImagingDrawObject* self, PyObject* args)
 {
     int x0, y0, x1, y1;
     int ink, fill;
     int start, end;
     if (!PyArg_ParseTuple(args, "(iiii)iiii",
-                          &x0, &y0, &x1, &y1, &start, &end, &ink, &fill))
-	return NULL;
+        &x0, &y0, &x1, &y1, &start, &end, &ink, &fill))
+        return NULL;
 
     if (ImagingDrawChord(self->image->image, x0, y0, x1, y1,
-                         start, end, &ink, fill, self->blend) < 0)
+        start, end, &ink, fill, self->blend) < 0)
         return NULL;
 
     Py_INCREF(Py_None);
     return Py_None;
 }
 
-static PyObject* 
+static PyObject*
 _draw_ellipse(ImagingDrawObject* self, PyObject* args)
 {
     double* xy;
@@ -2360,24 +2379,24 @@ _draw_ellipse(ImagingDrawObject* self, PyObject* args)
     int ink;
     int fill = 0;
     if (!PyArg_ParseTuple(args, "Oi|i", &data, &ink, &fill))
-	return NULL;
+       return NULL;
 
     n = PyPath_Flatten(data, &xy);
     if (n < 0)
-	return NULL;
+        return NULL;
     if (n != 2) {
-	PyErr_SetString(
+        PyErr_SetString(
             PyExc_TypeError,
             "coordinate list must contain exactly 2 coordinates"
             );
-	return NULL;
+        return NULL;
     }
 
     n = ImagingDrawEllipse(
         self->image->image, (int) xy[0], (int) xy[1], (int) xy[2], (int) xy[3],
         &ink, fill, self->blend
         );
-    
+
     free(xy);
 
     if (n < 0)
@@ -2387,23 +2406,23 @@ _draw_ellipse(ImagingDrawObject* self, PyObject* args)
     return Py_None;
 }
 
-static PyObject* 
+static PyObject*
 _draw_line(ImagingDrawObject* self, PyObject* args)
 {
     int x0, y0, x1, y1;
     int ink;
     if (!PyArg_ParseTuple(args, "(ii)(ii)i", &x0, &y0, &x1, &y1, &ink))
-	return NULL;
+        return NULL;
 
     if (ImagingDrawLine(self->image->image, x0, y0, x1, y1,
-                        &ink, self->blend) < 0)
-	return NULL;
+        &ink, self->blend) < 0)
+        return NULL;
 
     Py_INCREF(Py_None);
     return Py_None;
 }
 
-static PyObject* 
+static PyObject*
 _draw_lines(ImagingDrawObject* self, PyObject* args)
 {
     double *xy;
@@ -2413,39 +2432,39 @@ _draw_lines(ImagingDrawObject* self, PyObject* args)
     int ink;
     int width = 0;
     if (!PyArg_ParseTuple(args, "Oi|i", &data, &ink, &width))
-	return NULL;
+        return NULL;
 
     n = PyPath_Flatten(data, &xy);
     if (n < 0)
-	return NULL;
+        return NULL;
 
     if (width <= 1) {
         double *p = NULL;
-	for (i = 0; i < n-1; i++) {
-            p = &xy[i+i];
-            if (ImagingDrawLine(
-                    self->image->image,
-                    (int) p[0], (int) p[1], (int) p[2], (int) p[3],
-                    &ink, self->blend) < 0) {
-                free(xy);
-                return NULL;
-            }
+    for (i = 0; i < n-1; i++) {
+        p = &xy[i+i];
+        if (ImagingDrawLine(
+            self->image->image,
+            (int) p[0], (int) p[1], (int) p[2], (int) p[3],
+            &ink, self->blend) < 0) {
+        free(xy);
+        return NULL;
         }
-        if (p) /* draw last point */
-            ImagingDrawPoint(
-                    self->image->image,
-                    (int) p[2], (int) p[3],
-                    &ink, self->blend
-                );
+    }
+    if (p) /* draw last point */
+        ImagingDrawPoint(
+            self->image->image,
+            (int) p[2], (int) p[3],
+            &ink, self->blend
+        );
     } else {
         for (i = 0; i < n-1; i++) {
             double *p = &xy[i+i];
             if (ImagingDrawWideLine(
-                    self->image->image,
-                    (int) p[0], (int) p[1], (int) p[2], (int) p[3],
-                    &ink, width, self->blend) < 0) {
-                free(xy);
-                return NULL;
+                self->image->image,
+                (int) p[0], (int) p[1], (int) p[2], (int) p[3],
+                &ink, width, self->blend) < 0) {
+            free(xy);
+            return NULL;
             }
         }
     }
@@ -2456,22 +2475,22 @@ _draw_lines(ImagingDrawObject* self, PyObject* args)
     return Py_None;
 }
 
-static PyObject* 
+static PyObject*
 _draw_point(ImagingDrawObject* self, PyObject* args)
 {
     int x, y;
     int ink;
     if (!PyArg_ParseTuple(args, "(ii)i", &x, &y, &ink))
-	return NULL;
+        return NULL;
 
     if (ImagingDrawPoint(self->image->image, x, y, &ink, self->blend) < 0)
-	return NULL;
+        return NULL;
 
     Py_INCREF(Py_None);
     return Py_None;
 }
 
-static PyObject* 
+static PyObject*
 _draw_points(ImagingDrawObject* self, PyObject* args)
 {
     double *xy;
@@ -2480,19 +2499,19 @@ _draw_points(ImagingDrawObject* self, PyObject* args)
     PyObject *data;
     int ink;
     if (!PyArg_ParseTuple(args, "Oi", &data, &ink))
-	return NULL;
+        return NULL;
 
     n = PyPath_Flatten(data, &xy);
     if (n < 0)
-	return NULL;
+        return NULL;
 
     for (i = 0; i < n; i++) {
-	double *p = &xy[i+i];
-	if (ImagingDrawPoint(self->image->image, (int) p[0], (int) p[1],
-                             &ink, self->blend) < 0) {
-	    free(xy);
-	    return NULL;
-	}
+        double *p = &xy[i+i];
+        if (ImagingDrawPoint(self->image->image, (int) p[0], (int) p[1],
+            &ink, self->blend) < 0) {
+            free(xy);
+            return NULL;
+        }
     }
 
     free(xy);
@@ -2501,12 +2520,12 @@ _draw_points(ImagingDrawObject* self, PyObject* args)
     return Py_None;
 }
 
-#ifdef	WITH_ARROW
+#ifdef    WITH_ARROW
 
 /* from outline.c */
 extern ImagingOutline PyOutline_AsOutline(PyObject* outline);
 
-static PyObject* 
+static PyObject*
 _draw_outline(ImagingDrawObject* self, PyObject* args)
 {
     ImagingOutline outline;
@@ -2515,7 +2534,7 @@ _draw_outline(ImagingDrawObject* self, PyObject* args)
     int ink;
     int fill = 0;
     if (!PyArg_ParseTuple(args, "Oi|i", &outline_, &ink, &fill))
-	return NULL;
+        return NULL;
 
     outline = PyOutline_AsOutline(outline_);
     if (!outline) {
@@ -2524,8 +2543,8 @@ _draw_outline(ImagingDrawObject* self, PyObject* args)
     }
 
     if (ImagingDrawOutline(self->image->image, outline,
-                           &ink, fill, self->blend) < 0)
-	return NULL;
+        &ink, fill, self->blend) < 0)
+    return NULL;
 
     Py_INCREF(Py_None);
     return Py_None;
@@ -2533,25 +2552,25 @@ _draw_outline(ImagingDrawObject* self, PyObject* args)
 
 #endif
 
-static PyObject* 
+static PyObject*
 _draw_pieslice(ImagingDrawObject* self, PyObject* args)
 {
     int x0, y0, x1, y1;
     int ink, fill;
     int start, end;
     if (!PyArg_ParseTuple(args, "(iiii)iiii",
-                          &x0, &y0, &x1, &y1, &start, &end, &ink, &fill))
-	return NULL;
+        &x0, &y0, &x1, &y1, &start, &end, &ink, &fill))
+    return NULL;
 
     if (ImagingDrawPieslice(self->image->image, x0, y0, x1, y1,
-                            start, end, &ink, fill, self->blend) < 0)
-        return NULL;
+        start, end, &ink, fill, self->blend) < 0)
+    return NULL;
 
     Py_INCREF(Py_None);
     return Py_None;
 }
 
-static PyObject* 
+static PyObject*
 _draw_polygon(ImagingDrawObject* self, PyObject* args)
 {
     double *xy;
@@ -2562,33 +2581,33 @@ _draw_polygon(ImagingDrawObject* self, PyObject* args)
     int ink;
     int fill = 0;
     if (!PyArg_ParseTuple(args, "Oi|i", &data, &ink, &fill))
-	return NULL;
+        return NULL;
 
     n = PyPath_Flatten(data, &xy);
     if (n < 0)
-	return NULL;
+        return NULL;
     if (n < 2) {
-	PyErr_SetString(
+        PyErr_SetString(
             PyExc_TypeError,
             "coordinate list must contain at least 2 coordinates"
             );
-	return NULL;
+        return NULL;
     }
 
     /* Copy list of vertices to array */
     ixy = (int*) malloc(n * 2 * sizeof(int));
 
     for (i = 0; i < n; i++) {
-	ixy[i+i] = (int) xy[i+i];
-	ixy[i+i+1] = (int) xy[i+i+1];
+        ixy[i+i] = (int) xy[i+i];
+        ixy[i+i+1] = (int) xy[i+i+1];
     }
 
     free(xy);
 
     if (ImagingDrawPolygon(self->image->image, n, ixy,
-                           &ink, fill, self->blend) < 0) {
-	free(ixy);
-	return NULL;
+        &ink, fill, self->blend) < 0) {
+        free(ixy);
+        return NULL;
     }
 
     free(ixy);
@@ -2597,7 +2616,7 @@ _draw_polygon(ImagingDrawObject* self, PyObject* args)
     return Py_None;
 }
 
-static PyObject* 
+static PyObject*
 _draw_rectangle(ImagingDrawObject* self, PyObject* args)
 {
     double* xy;
@@ -2607,24 +2626,24 @@ _draw_rectangle(ImagingDrawObject* self, PyObject* args)
     int ink;
     int fill = 0;
     if (!PyArg_ParseTuple(args, "Oi|i", &data, &ink, &fill))
-	return NULL;
+        return NULL;
 
     n = PyPath_Flatten(data, &xy);
     if (n < 0)
-	return NULL;
+        return NULL;
     if (n != 2) {
-	PyErr_SetString(
+        PyErr_SetString(
             PyExc_TypeError,
             "coordinate list must contain exactly 2 coordinates"
             );
-	return NULL;
+        return NULL;
     }
 
     n = ImagingDrawRectangle(
         self->image->image, (int) xy[0], (int) xy[1],
         (int) xy[2], (int) xy[3], &ink, fill, self->blend
         );
-    
+
     free(xy);
 
     if (n < 0)
@@ -2656,12 +2675,13 @@ static struct PyMethodDef _draw_methods[] = {
     {NULL, NULL} /* sentinel */
 };
 
-static PyObject*  
+#ifndef PY3
+static PyObject*
 _draw_getattr(ImagingDrawObject* self, char* name)
 {
     return Py_FindMethod(_draw_methods, (PyObject*) self, name);
 }
-
+#endif
 #endif
 
 
@@ -2676,7 +2696,7 @@ pixel_access_new(ImagingObject* imagep, PyObject* args)
 
     self = PyObject_New(PixelAccessObject, &PixelAccess_Type);
     if (self == NULL)
-	return NULL;
+        return NULL;
 
     /* keep a reference to the image object */
     Py_INCREF(imagep);
@@ -2720,8 +2740,8 @@ pixel_access_setitem(PixelAccessObject *self, PyObject *xy, PyObject *color)
         return -1;
 
     if (x < 0 || x >= im->xsize || y < 0 || y >= im->ysize) {
-	PyErr_SetString(PyExc_IndexError, outside_image);
-	return -1;
+        PyErr_SetString(PyExc_IndexError, outside_image);
+        return -1;
     }
 
     if (!color) /* FIXME: raise exception? */
@@ -2736,12 +2756,12 @@ pixel_access_setitem(PixelAccessObject *self, PyObject *xy, PyObject *color)
 }
 
 /* -------------------------------------------------------------------- */
-/* EFFECTS (experimental)        					*/
+/* EFFECTS (experimental)                                               */
 /* -------------------------------------------------------------------- */
 
 #ifdef WITH_EFFECTS
 
-static PyObject* 
+static PyObject*
 _effect_mandelbrot(ImagingObject* self, PyObject* args)
 {
     int xsize = 512;
@@ -2753,31 +2773,31 @@ _effect_mandelbrot(ImagingObject* self, PyObject* args)
     extent[2] = 2;  extent[3] = 2.5;
 
     if (!PyArg_ParseTuple(args, "|(ii)(dddd)i", &xsize, &ysize,
-                          &extent[0], &extent[1], &extent[2], &extent[3],
-                          &quality))
-	return NULL;
+        &extent[0], &extent[1], &extent[2], &extent[3],
+        &quality))
+        return NULL;
 
     return PyImagingNew(ImagingEffectMandelbrot(xsize, ysize, extent, quality));
 }
 
-static PyObject* 
+static PyObject*
 _effect_noise(ImagingObject* self, PyObject* args)
 {
     int xsize, ysize;
     float sigma = 128;
     if (!PyArg_ParseTuple(args, "(ii)|f", &xsize, &ysize, &sigma))
-	return NULL;
+        return NULL;
 
     return PyImagingNew(ImagingEffectNoise(xsize, ysize, sigma));
 }
 
-static PyObject* 
+static PyObject*
 _effect_spread(ImagingObject* self, PyObject* args)
 {
     int dist;
 
     if (!PyArg_ParseTuple(args, "i", &dist))
-	return NULL;
+        return NULL;
 
     return PyImagingNew(ImagingEffectSpread(self->image, dist));
 }
@@ -2785,21 +2805,23 @@ _effect_spread(ImagingObject* self, PyObject* args)
 #endif
 
 /* -------------------------------------------------------------------- */
-/* UTILITIES								*/
+/* UTILITIES                                                            */
 /* -------------------------------------------------------------------- */
 
-static PyObject* 
+static PyObject*
 _crc32(PyObject* self, PyObject* args)
 {
     unsigned char* buffer;
     int bytes;
-    int hi, lo;
+    int hi=0, lo=0;
     UINT32 crc;
 
-    hi = lo = 0;
-
+#ifdef PY3
+    if (!PyArg_ParseTuple(args, "y#|(ii)", &buffer, &bytes, &hi, &lo))
+#else
     if (!PyArg_ParseTuple(args, "s#|(ii)", &buffer, &bytes, &hi, &lo))
-	return NULL;
+#endif
+        return NULL;
 
     crc = ((UINT32) (hi & 0xFFFF) << 16) + (lo & 0xFFFF);
 
@@ -2808,48 +2830,51 @@ _crc32(PyObject* self, PyObject* args)
     return Py_BuildValue("ii", (crc >> 16) & 0xFFFF, crc & 0xFFFF);
 }
 
-static PyObject* 
+static PyObject*
 _getcodecstatus(PyObject* self, PyObject* args)
 {
     int status;
     char* msg;
 
     if (!PyArg_ParseTuple(args, "i", &status))
-	return NULL;
+        return NULL;
 
     switch (status) {
-    case IMAGING_CODEC_OVERRUN:
-	msg = "buffer overrun"; break;
+    case IMAGING_CODEC_OVERRUN: 
+        msg = "buffer overrun"; break;
     case IMAGING_CODEC_BROKEN:
-	msg = "broken data stream"; break;
+        msg = "broken data stream"; break;
     case IMAGING_CODEC_UNKNOWN:
-	msg = "unrecognized data stream contents"; break;
+        msg = "unrecognized data stream contents"; break;
     case IMAGING_CODEC_CONFIG:
-	msg = "codec configuration error"; break;
+        msg = "codec configuration error"; break;
     case IMAGING_CODEC_MEMORY:
-	msg = "out of memory"; break;
+        msg = "out of memory"; break;
     default:
-	Py_INCREF(Py_None);
-	return Py_None;
+        Py_INCREF(Py_None);
+        return Py_None;
     }
-
+#ifdef PY3
+    return PyUnicode_FromString(msg);
+#else
     return PyString_FromString(msg);
+#endif
 }
 
 /* -------------------------------------------------------------------- */
-/* DEBUGGING HELPERS							*/
+/* DEBUGGING HELPERS                                                    */
 /* -------------------------------------------------------------------- */
 
 
 #ifdef WITH_DEBUG
 
-static PyObject* 
+static PyObject*
 _save_ppm(ImagingObject* self, PyObject* args)
 {
     char* filename;
 
     if (!PyArg_ParseTuple(args, "s", &filename))
-	return NULL;
+        return NULL;
 
     if (!ImagingSavePPM(self->image, filename))
         return NULL;
@@ -2917,7 +2942,7 @@ static struct PyMethodDef methods[] = {
     {"fillband", (PyCFunction)_fillband, 1},
 
     {"setmode", (PyCFunction)im_setmode, 1},
-    
+
     {"getpalette", (PyCFunction)_getpalette, 1},
     {"putpalette", (PyCFunction)_putpalette, 1},
     {"putpalettealpha", (PyCFunction)_putpalettealpha, 1},
@@ -2964,25 +2989,37 @@ static struct PyMethodDef methods[] = {
 
 /* attributes */
 
-static PyObject*  
+static PyObject*
 _getattr(ImagingObject* self, char* name)
 {
     PyObject* res;
-
+#ifdef PY3
+    res = PyObject_GenericGetAttr((PyObject *)self,
+        PyUnicode_FromString(name));
+#else
     res = Py_FindMethod(methods, (PyObject*) self, name);
+#endif
     if (res)
-	return res;
+        return res;
     PyErr_Clear();
     if (strcmp(name, "mode") == 0)
-	return PyString_FromString(self->image->mode);
+#ifdef PY3
+        return PyUnicode_FromString(self->image->mode);
+#else
+        return PyString_FromString(self->image->mode);
+#endif
     if (strcmp(name, "size") == 0)
-	return Py_BuildValue("ii", self->image->xsize, self->image->ysize);
+        return Py_BuildValue("ii", self->image->xsize, self->image->ysize);
     if (strcmp(name, "bands") == 0)
-	return PyInt_FromLong(self->image->bands);
+        return PyInt_FromLong(self->image->bands);
     if (strcmp(name, "id") == 0)
-	return PyInt_FromLong((long) self->image);
+        return PyInt_FromSsize_t((Py_ssize_t) self->image);
     if (strcmp(name, "ptr") == 0)
+#ifdef PY3
+        return PyCapsule_New((void *)self->image, NULL, NULL);
+#else
         return PyCObject_FromVoidPtrAndDesc(self->image, IMAGING_MAGIC, NULL);
+#endif
     PyErr_SetString(PyExc_AttributeError, name);
     return NULL;
 }
@@ -3014,7 +3051,7 @@ image_item(ImagingObject *self, Py_ssize_t i)
 }
 
 static PySequenceMethods image_as_sequence = {
-    (inquiry) image_length, /*sq_length*/
+    (lenfunc) image_length, /*sq_length*/
     (binaryfunc) NULL, /*sq_concat*/
     (ssizeargfunc) NULL, /*sq_repeat*/
     (ssizeargfunc) image_item, /*sq_item*/
@@ -3025,82 +3062,167 @@ static PySequenceMethods image_as_sequence = {
 
 
 /* type description */
-
+#ifdef PY3
+static PyTypeObject Imaging_Type = {
+    PyVarObject_HEAD_INIT(0,0)
+#else
 statichere PyTypeObject Imaging_Type = {
     PyObject_HEAD_INIT(NULL)
-    0,				/*ob_size*/
-    "ImagingCore",		/*tp_name*/
-    sizeof(ImagingObject),	/*tp_size*/
-    0,				/*tp_itemsize*/
+    0,                            /*ob_size*/
+#endif
+    "ImagingCore",                /*tp_name*/
+    sizeof(ImagingObject),        /*tp_size*/
+    0,                            /*tp_itemsize*/
     /* methods */
-    (destructor)_dealloc,	/*tp_dealloc*/
-    0,				/*tp_print*/
-    (getattrfunc)_getattr,	/*tp_getattr*/
-    0,				/*tp_setattr*/
-    0,				/*tp_compare*/
-    0,				/*tp_repr*/
-    0,                          /*tp_as_number */
-    &image_as_sequence,         /*tp_as_sequence */
-    0,                          /*tp_as_mapping */
-    0                           /*tp_hash*/
+    (destructor)_dealloc,         /*tp_dealloc*/
+    0,                            /*tp_print*/
+    (getattrfunc)_getattr,        /*tp_getattr*/
+    0,                            /*tp_setattr*/
+    0,                            /*tp_compare*/
+    0,                            /*tp_repr*/
+    0,                            /*tp_as_number */
+    &image_as_sequence,           /*tp_as_sequence */
+    0,                            /* tp_as_mapping */
+    0,                            /* tp_hash */
+    0,                            /* tp_call */
+    0,                            /* tp_str */
+    0,                            /* tp_getattro */
+    0,                            /* tp_setattro */
+    0,                            /* tp_as_buffer */
+    0,                            /* tp_flags */
+    0,                            /* tp_doc */
+    0,                            /* tp_traverse */
+    0,                            /* tp_clear */
+    0,                            /* tp_richcompare */
+    0,                            /* tp_weaklistoffset */
+    0,                            /* tp_iter */
+    0,                            /* tp_iternext */
+    methods,                      /* tp_methods */
 };
 
 #ifdef WITH_IMAGEDRAW
 
+#ifdef PY3
+static PyTypeObject ImagingFont_Type = {
+    PyVarObject_HEAD_INIT(0,0)
+#else
 statichere PyTypeObject ImagingFont_Type = {
     PyObject_HEAD_INIT(NULL)
-    0,				/*ob_size*/
-    "ImagingFont",		/*tp_name*/
-    sizeof(ImagingFontObject),	/*tp_size*/
-    0,				/*tp_itemsize*/
+    0,                            /*ob_size*/
+#endif
+    "ImagingFont",                /*tp_name*/
+    sizeof(ImagingFontObject),    /*tp_size*/
+    0,                            /*tp_itemsize*/
     /* methods */
-    (destructor)_font_dealloc,	/*tp_dealloc*/
-    0,				/*tp_print*/
-    (getattrfunc)_font_getattr,	/*tp_getattr*/
+    (destructor)_font_dealloc,    /*tp_dealloc*/
+    0,                            /*tp_print*/
+#ifdef PY3
+    0,                            /* tp_getattr */
+    0,                            /* tp_setattr */
+    0,                            /* tp_compare */
+    0,                            /* tp_repr */
+    0,                            /* tp_as_number */
+    0,                            /* tp_as_sequence */
+    0,                            /* tp_as_mapping */
+    0,                            /* tp_hash */
+    0,                            /* tp_call */
+    0,                            /* tp_str */
+    PyObject_GenericGetAttr,      /* tp_getattro */
+    0,                            /* tp_setattro */
+    0,                            /* tp_as_buffer */
+    0,                            /* tp_flags */
+    0,                            /* tp_doc */
+    0,                            /* tp_traverse */
+    0,                            /* tp_clear */
+    0,                            /* tp_richcompare */
+    0,                            /* tp_weaklistoffset */
+    0,                            /* tp_iter */
+    0,                            /* tp_iternext */
+    _font_methods,                /* tp_methods */
+#else
+    (getattrfunc)_font_getattr,    /*tp_getattr*/
+#endif
 };
 
+#ifdef PY3
+static PyTypeObject ImagingDraw_Type = {
+    PyVarObject_HEAD_INIT(0,0)
+#else
 statichere PyTypeObject ImagingDraw_Type = {
     PyObject_HEAD_INIT(NULL)
-    0,				/*ob_size*/
-    "ImagingDraw",		/*tp_name*/
-    sizeof(ImagingDrawObject),	/*tp_size*/
-    0,				/*tp_itemsize*/
+    0,                            /*ob_size*/
+#endif
+    "ImagingDraw",                /*tp_name*/
+    sizeof(ImagingDrawObject),    /*tp_size*/
+    0,                            /*tp_itemsize*/
     /* methods */
-    (destructor)_draw_dealloc,	/*tp_dealloc*/
-    0,				/*tp_print*/
-    (getattrfunc)_draw_getattr,	/*tp_getattr*/
+    (destructor)_draw_dealloc,    /*tp_dealloc*/
+    0,                            /*tp_print*/
+#ifdef PY3
+    0,                            /* tp_getattr*/
+    0,                            /* tp_setattr */
+    0,                            /* tp_compare */
+    0,                            /* tp_repr */
+    0,                            /* tp_as_number */
+    0,                            /* tp_as_sequence */
+    0,                            /* tp_as_mapping */
+    0,                            /* tp_hash */
+    0,                            /* tp_call */
+    0,                            /* tp_str */
+    PyObject_GenericGetAttr,      /* tp_getattro */
+    0,                            /* tp_setattro */
+    0,                            /* tp_as_buffer */
+    0,                            /* tp_flags */
+    0,                            /* tp_doc */
+    0,                            /* tp_traverse */
+    0,                            /* tp_clear */
+    0,                            /* tp_richcompare */
+    0,                            /* tp_weaklistoffset */
+    0,                            /* tp_iter */
+    0,                            /* tp_iternext */
+    _draw_methods,                /* tp_methods */
+#else
+    (getattrfunc)_draw_getattr,   /*tp_getattr*/
+#endif
 };
 
 #endif
 
 static PyMappingMethods pixel_access_as_mapping = {
-    (inquiry) NULL, /*mp_length*/
-    (binaryfunc) pixel_access_getitem, /*mp_subscript*/
+    (lenfunc) NULL,                       /*mp_length*/
+    (binaryfunc) pixel_access_getitem,    /*mp_subscript*/
     (objobjargproc) pixel_access_setitem, /*mp_ass_subscript*/
 };
 
 /* type description */
-
+#ifdef PY3
+static PyTypeObject PixelAccess_Type = {
+    PyVarObject_HEAD_INIT(0,0)
+#else
 statichere PyTypeObject PixelAccess_Type = {
     PyObject_HEAD_INIT(NULL)
-    0, "PixelAccess", sizeof(PixelAccessObject), 0,
+    0,                                  /*ob_size*/
+#endif
+    "PixelAccess",
+    sizeof(PixelAccessObject),
+    0,
     /* methods */
     (destructor)pixel_access_dealloc, /*tp_dealloc*/
-    0, /*tp_print*/
-    0, /*tp_getattr*/
-    0, /*tp_setattr*/
-    0, /*tp_compare*/
-    0, /*tp_repr*/
-    0, /*tp_as_number */
-    0, /*tp_as_sequence */
-    &pixel_access_as_mapping, /*tp_as_mapping */
-    0 /*tp_hash*/
+    0,                                /*tp_print*/
+    0,                                /*tp_getattr*/
+    0,                                /*tp_setattr*/
+    0,                                /*tp_compare*/
+    0,                                /*tp_repr*/
+    0,                                /*tp_as_number */
+    0,                                /*tp_as_sequence */
+    &pixel_access_as_mapping,         /*tp_as_mapping */
+    0                                 /*tp_hash*/
 };
 
 /* -------------------------------------------------------------------- */
 
 /* FIXME: this is something of a mess.  Should replace this with
-   pluggable codecs, but not before PIL 1.2 */
+    pluggable codecs, but not before PIL 1.2 */
 
 /* Decoders (in decode.c) */
 extern PyObject* PyImaging_BitDecoderNew(PyObject* self, PyObject* args);
@@ -3109,6 +3231,7 @@ extern PyObject* PyImaging_GifDecoderNew(PyObject* self, PyObject* args);
 extern PyObject* PyImaging_HexDecoderNew(PyObject* self, PyObject* args);
 extern PyObject* PyImaging_JpegDecoderNew(PyObject* self, PyObject* args);
 extern PyObject* PyImaging_TiffLzwDecoderNew(PyObject* self, PyObject* args);
+extern PyObject* PyImaging_LibTiffDecoderNew(PyObject* self, PyObject* args);
 extern PyObject* PyImaging_MspDecoderNew(PyObject* self, PyObject* args);
 extern PyObject* PyImaging_PackbitsDecoderNew(PyObject* self, PyObject* args);
 extern PyObject* PyImaging_PcdDecoderNew(PyObject* self, PyObject* args);
@@ -3175,6 +3298,12 @@ static PyMethodDef functions[] = {
     {"jpeg_encoder", (PyCFunction)PyImaging_JpegEncoderNew, 1},
 #endif
     {"tiff_lzw_decoder", (PyCFunction)PyImaging_TiffLzwDecoderNew, 1},
+#ifdef HAVE_LIBTIFF
+    {"tiff_ccitt_decoder", (PyCFunction)PyImaging_LibTiffDecoderNew, 1},
+    {"group3_decoder", (PyCFunction)PyImaging_LibTiffDecoderNew, 1},
+    {"group4_decoder", (PyCFunction)PyImaging_LibTiffDecoderNew, 1},
+    {"tiff_raw_16_decoder", (PyCFunction)PyImaging_LibTiffDecoderNew, 1},
+#endif
     {"msp_decoder", (PyCFunction)PyImaging_MspDecoderNew, 1},
     {"packbits_decoder", (PyCFunction)PyImaging_PackbitsDecoderNew, 1},
     {"pcd_decoder", (PyCFunction)PyImaging_PcdDecoderNew, 1},
@@ -3237,7 +3366,7 @@ static PyMethodDef functions[] = {
 #ifdef WITH_IMAGEPATH
     {"path", (PyCFunction)PyPath_Create, 1},
 #endif
-    
+
     /* Experimental arrow graphics stuff */
 #ifdef WITH_ARROW
     {"outline", (PyCFunction)PyOutline_Create, 1},
@@ -3246,12 +3375,40 @@ static PyMethodDef functions[] = {
     {NULL, NULL} /* sentinel */
 };
 
+#ifdef PY3
+
+static struct PyModuleDef _imaging_module = {
+    PyModuleDef_HEAD_INIT,  /* m_base */
+    "_imaging",             /* m_name */
+    NULL,                   /* m_doc */
+    -1,                     /* m_size */
+    functions,              /* m_methods */
+};
+
+PyMODINIT_FUNC
+PyInit__imaging(void)
+{
+    PyObject* m;
+    PyObject* d;
+    /* Patch object type */
+    Py_TYPE(&Imaging_Type) = &PyType_Type;
+#ifdef WITH_IMAGEDRAW
+    Py_TYPE(&ImagingFont_Type) = &PyType_Type;
+    Py_TYPE(&ImagingDraw_Type) = &PyType_Type;
+#endif
+    Py_TYPE(&PixelAccess_Type) = &PyType_Type;
+    
+    ImagingAccessInit();
+
+    m = PyModule_Create(&_imaging_module);
+    d = PyModule_GetDict(m);
+
+#else
 DL_EXPORT(void)
 init_imaging(void)
 {
     PyObject* m;
     PyObject* d;
-
     /* Patch object type */
     Imaging_Type.ob_type = &PyType_Type;
 #ifdef WITH_IMAGEDRAW
@@ -3264,18 +3421,31 @@ init_imaging(void)
 
     m = Py_InitModule("_imaging", functions);
     d = PyModule_GetDict(m);
+#endif
 
 #ifdef HAVE_LIBJPEG
-  {
-    extern const char* ImagingJpegVersion(void);
+    {
+        extern const char* ImagingJpegVersion(void);
+#ifdef PY3
+    PyDict_SetItemString(d, "jpeglib_version", PyUnicode_FromString(ImagingJpegVersion()));
+#else
     PyDict_SetItemString(d, "jpeglib_version", PyString_FromString(ImagingJpegVersion()));
-  }
+#endif
+    }
 #endif
 
 #ifdef HAVE_LIBZ
-  {
-    extern const char* ImagingZipVersion(void);
+    {
+        extern const char* ImagingZipVersion(void);
+#ifdef PY3
+    PyDict_SetItemString(d, "zlib_version", PyUnicode_FromString(ImagingZipVersion()));
+#else
     PyDict_SetItemString(d, "zlib_version", PyString_FromString(ImagingZipVersion()));
-  }
+#endif
+    }
+#endif
+
+#ifdef PY3
+    return m;
 #endif
 }

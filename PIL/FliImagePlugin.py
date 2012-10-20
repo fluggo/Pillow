@@ -18,15 +18,15 @@
 
 __version__ = "0.2"
 
-import Image, ImageFile, ImagePalette
+from . import Image, ImageFile, ImagePalette
 import string
 
 
 def i16(c):
-    return ord(c[0]) + (ord(c[1])<<8)
+    return c[0] + (c[1] << 8)
 
 def i32(c):
-    return ord(c[0]) + (ord(c[1])<<8) + (ord(c[2])<<16) + (ord(c[3])<<24)
+    return c[0] + (c[1] << 8) + (c[2] << 16) + (c[3] << 24)
 
 #
 # decoder
@@ -49,7 +49,7 @@ class FliImageFile(ImageFile.ImageFile):
         s = self.fp.read(128)
         magic = i16(s[4:6])
         if magic not in [0xAF11, 0xAF12]:
-            raise SyntaxError, "not an FLI/FLC file"
+            raise SyntaxError("not an FLI/FLC file")
 
         # image characteristics
         self.mode = "P"
@@ -58,11 +58,11 @@ class FliImageFile(ImageFile.ImageFile):
         # animation speed
         duration = i32(s[16:20])
         if magic == 0xAF11:
-            duration = (duration * 1000) / 70
+            duration = (duration * 1000) // 70
         self.info["duration"] = duration
 
         # look for palette
-        palette = map(lambda a: (a,a,a), range(256))
+        palette = [(a,a,a) for a in range(256)]
 
         s = self.fp.read(16)
 
@@ -81,8 +81,8 @@ class FliImageFile(ImageFile.ImageFile):
             elif i16(s[4:6]) == 4:
                 self._palette(palette, 0)
 
-        palette = map(lambda (r,g,b): chr(r)+chr(g)+chr(b), palette)
-        self.palette = ImagePalette.raw("RGB", string.join(palette, ""))
+        palette = [bytes(r_g_b) for r_g_b in palette]
+        self.palette = ImagePalette.raw("RGB", b"".join(palette))
 
         # set things up to decode first frame
         self.frame = -1
@@ -96,22 +96,22 @@ class FliImageFile(ImageFile.ImageFile):
         i = 0
         for e in range(i16(self.fp.read(2))):
             s = self.fp.read(2)
-            i = i + ord(s[0])
-            n = ord(s[1])
+            i = i + s[0]
+            n = s[1]
             if n == 0:
                 n = 256
             s = self.fp.read(n * 3)
             for n in range(0, len(s), 3):
-                r = ord(s[n]) << shift
-                g = ord(s[n+1]) << shift
-                b = ord(s[n+2]) << shift
-                palette[i] = (r, g, b)
+                r = s[n] << shift
+                g = s[n+1] << shift
+                b = s[n+2] << shift
+                palette[i] = bytes((r, g, b))
                 i = i + 1
 
     def seek(self, frame):
 
         if frame != self.frame + 1:
-            raise ValueError, "cannot seek to frame %d" % frame
+            raise ValueError("cannot seek to frame %d" % frame)
         self.frame = frame
 
         # move to next frame

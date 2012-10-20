@@ -15,7 +15,7 @@
 
 __version__ = "0.1"
 
-import Image, ImageFile
+from . import Image, ImageFile
 
 #
 # Bitstream parser
@@ -28,21 +28,21 @@ class BitStream:
         self.bitbuffer = 0
 
     def next(self):
-        return ord(self.fp.read(1))
+        return self.fp.read(1)
 
     def peek(self, bits):
         while self.bits < bits:
             c = self.next()
-            if c < 0:
+            if c[0] < 0:
                 self.bits = 0
                 continue
-            self.bitbuffer = (self.bitbuffer << 8) + c
+            self.bitbuffer = (self.bitbuffer << 8) + c[0]
             self.bits = self.bits + 8
-        return self.bitbuffer >> (self.bits - bits) & (1L << bits) - 1
+        return self.bitbuffer >> (self.bits - bits) & (1 << bits) - 1
 
     def skip(self, bits):
         while self.bits < bits:
-            self.bitbuffer = (self.bitbuffer << 8) + ord(self.fp.read(1))
+            self.bitbuffer = (self.bitbuffer << 8) + self.fp.read(1)[0]
             self.bits = self.bits + 8
         self.bits = self.bits - bits
 
@@ -65,7 +65,7 @@ class MpegImageFile(ImageFile.ImageFile):
         s = BitStream(self.fp)
 
         if s.read(32) != 0x1B3:
-            raise SyntaxError, "not an MPEG file"
+            raise SyntaxError("not an MPEG file")
 
         self.mode = "RGB"
         self.size = s.read(12), s.read(12)

@@ -28,6 +28,10 @@ Vasiliev, Sasha Voynow, Charles Waldman, Collin Winter, Dan Wolfe,
 Ka-Ping Yee, and many others (if your name should be on this list, let
 me know.)
 
+*** Changes from release 1.1.7 to 1.1.8 ***
+
++ Added support for reading 16-bit RGB TIFF file.
+
 *** Changes from release 1.1.6 to 1.1.7 ***
 
 This section may not be fully complete.  For changes since this file

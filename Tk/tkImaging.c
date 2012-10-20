@@ -15,8 +15,8 @@
  * If you're using Python in an embedded context, you can add the
  * following lines to your Tcl_AppInit function (in tkappinit.c)
  * instead.  Put them after the calls to Tcl_Init and Tk_Init:
- *	
- *	{
+ *    
+ *    {
  *          extern void TkImaging_Init(Tcl_Interp* interp);
  *          TkImaging_Init(interp);
  *      }
@@ -63,7 +63,7 @@ ImagingFind(const char* name)
     /* FIXME: use CObject instead? */
     id = atol(name);
     if (!id)
-	return NULL;
+    return NULL;
 
     return (Imaging) id;
 }
@@ -95,43 +95,43 @@ PyImagingPhotoPut(ClientData clientdata, Tcl_Interp* interp,
     /* get PIL Image handle */
     im = ImagingFind(argv[2]);
     if (!im) {
-	Tcl_AppendResult(interp, "bad name", (char*) NULL);
-	return TCL_ERROR;
+    Tcl_AppendResult(interp, "bad name", (char*) NULL);
+    return TCL_ERROR;
     }
     if (!im->block) {
-	Tcl_AppendResult(interp, "bad display memory", (char*) NULL);
-	return TCL_ERROR;
+    Tcl_AppendResult(interp, "bad display memory", (char*) NULL);
+    return TCL_ERROR;
     }
 
     /* Active region */
 #if 0
     if (src_xoffset + xsize > im->xsize)
-	xsize = im->xsize - src_xoffset;
+    xsize = im->xsize - src_xoffset;
     if (src_yoffset + ysize > im->ysize)
-	ysize = im->ysize - src_yoffset;
+    ysize = im->ysize - src_yoffset;
     if (xsize < 0 || ysize < 0
-	|| src_xoffset >= im->xsize
-	|| src_yoffset >= im->ysize)
-	return TCL_OK;
+    || src_xoffset >= im->xsize
+    || src_yoffset >= im->ysize)
+    return TCL_OK;
 #endif
 
     /* Mode */
 
     if (strcmp(im->mode, "1") == 0 || strcmp(im->mode, "L") == 0) {
-	block.pixelSize = 1;
-	block.offset[0] = block.offset[1] = block.offset[2] = 0;
+    block.pixelSize = 1;
+    block.offset[0] = block.offset[1] = block.offset[2] = 0;
     } else if (strncmp(im->mode, "RGB", 3) == 0) {
-	block.pixelSize = 4;
-	block.offset[0] = 0;
-	block.offset[1] = 1;
-	block.offset[2] = 2;
+    block.pixelSize = 4;
+    block.offset[0] = 0;
+    block.offset[1] = 1;
+    block.offset[2] = 2;
         if (strcmp(im->mode, "RGBA") == 0)
             block.offset[3] = 3; /* alpha (or reserved, under 8.2) */
         else
             block.offset[3] = 0; /* no alpha */
     } else {
         Tcl_AppendResult(interp, "Bad mode", (char*) NULL);
-	return TCL_ERROR;
+    return TCL_ERROR;
     }
 
     block.width = im->xsize;
@@ -140,8 +140,8 @@ PyImagingPhotoPut(ClientData clientdata, Tcl_Interp* interp,
     block.pixelPtr = (unsigned char*) im->block;
 #if 0
     block.pixelPtr = (unsigned char*) im->block +
-	             src_yoffset * im->linesize +
-	             src_xoffset * im->pixelsize;
+                 src_yoffset * im->linesize +
+                 src_xoffset * im->pixelsize;
 #endif
 
 #if TK < 84 /* < 8.4.0 */
@@ -160,7 +160,7 @@ PyImagingPhotoPut(ClientData clientdata, Tcl_Interp* interp,
         run.offset[0] = 0;
         run.offset[1] = 1;
         run.offset[2] = 2;
-	run.offset[3] = 0; /* no alpha (or reserved, under 8.2) */
+    run.offset[3] = 0; /* no alpha (or reserved, under 8.2) */
 
         /* Copy opaque runs to photo image */
         for (y = 0; y < block.height; y++) {

@@ -26,9 +26,11 @@
 
 #include "Imaging.h"
 
+#include "py3.h"
+
 
 /* -------------------------------------------------------------------- */
-/* Class								*/
+/* Class                                                                */
 
 typedef struct {
     PyObject_HEAD
@@ -37,7 +39,11 @@ typedef struct {
 
 staticforward PyTypeObject OutlineType;
 
+#ifdef PY3
+#define PyOutline_Check(op) (Py_TYPE(op) == &OutlineType)
+#else
 #define PyOutline_Check(op) ((op)->ob_type == &OutlineType)
+#endif
 
 static OutlineObject*
 _outline_new(void)
@@ -46,7 +52,7 @@ _outline_new(void)
 
     self = PyObject_New(OutlineObject, &OutlineType);
     if (self == NULL)
-	return NULL;
+    return NULL;
 
     self->outline = ImagingOutlineNew();
 
@@ -71,7 +77,7 @@ PyOutline_AsOutline(PyObject* outline)
 
 
 /* -------------------------------------------------------------------- */
-/* Factories								*/
+/* Factories                                                            */
 
 PyObject*
 PyOutline_Create(PyObject* self, PyObject* args)
@@ -84,14 +90,14 @@ PyOutline_Create(PyObject* self, PyObject* args)
 
 
 /* -------------------------------------------------------------------- */
-/* Methods								*/
+/* Methods                                                              */
 
 static PyObject*
 _outline_move(OutlineObject* self, PyObject* args)
 {
     float x0, y0;
     if (!PyArg_ParseTuple(args, "ff", &x0, &y0))
-	return NULL;
+    return NULL;
 
     ImagingOutlineMove(self->outline, x0, y0);
 
@@ -104,7 +110,7 @@ _outline_line(OutlineObject* self, PyObject* args)
 {
     float x1, y1;
     if (!PyArg_ParseTuple(args, "ff", &x1, &y1))
-	return NULL;
+    return NULL;
 
     ImagingOutlineLine(self->outline, x1, y1);
 
@@ -117,7 +123,7 @@ _outline_curve(OutlineObject* self, PyObject* args)
 {
     float x1, y1, x2, y2, x3, y3;
     if (!PyArg_ParseTuple(args, "ffffff", &x1, &y1, &x2, &y2, &x3, &y3))
-	return NULL;
+    return NULL;
 
     ImagingOutlineCurve(self->outline, x1, y1, x2, y2, x3, y3);
 
@@ -159,21 +165,53 @@ static struct PyMethodDef _outline_methods[] = {
     {NULL, NULL} /* sentinel */
 };
 
+#ifndef PY3
 static PyObject*  
 _outline_getattr(OutlineObject* self, char* name)
 {
     return Py_FindMethod(_outline_methods, (PyObject*) self, name);
 }
+#endif
 
+#ifdef PY3
+static PyTypeObject OutlineType = {
+    PyVarObject_HEAD_INIT(0,0)
+#else
 statichere PyTypeObject OutlineType = {
-	PyObject_HEAD_INIT(NULL)
-	0,				/*ob_size*/
-	"Outline",			/*tp_name*/
-	sizeof(OutlineObject),		/*tp_size*/
-	0,				/*tp_itemsize*/
-	/* methods */
-	(destructor)_outline_dealloc,	/*tp_dealloc*/
-	0,				/*tp_print*/
-	(getattrfunc)_outline_getattr,	/*tp_getattr*/
-	0				/*tp_setattr*/
+    PyObject_HEAD_INIT(NULL)
+    0,                             /*ob_size*/
+#endif
+    "Outline",                     /*tp_name*/
+    sizeof(OutlineObject),         /*tp_size*/
+    0,                             /*tp_itemsize*/
+    /* methods */
+    (destructor)_outline_dealloc,  /*tp_dealloc*/
+    0,                             /*tp_print*/
+#ifdef PY3
+    0,                             /* tp_getattr*/
+    0,                             /* tp_setattr */
+    0,                             /* tp_compare */
+    0,                             /* tp_repr */
+    0,                             /* tp_as_number */
+    0,                             /* tp_as_sequence */
+    0,                             /* tp_as_mapping */
+    0,                             /* tp_hash */
+    0,                             /* tp_call */
+    0,                             /* tp_str */
+    0,                             /* tp_getattro */
+    0,                             /* tp_setattro */
+    0,                             /* tp_as_buffer */
+    0,                             /* tp_flags */
+    0,                             /* tp_doc */
+    0,                             /* tp_traverse */
+    0,                             /* tp_clear */
+    0,                             /* tp_richcompare */
+    0,                             /* tp_weaklistoffset */
+    0,                             /* tp_iter */
+    0,                             /* tp_iternext */
+    _outline_methods,              /* tp_methods */
+#else
+    (getattrfunc)_outline_getattr, /*tp_getattr*/
+    0                              /*tp_setattr*/
+#endif
 };

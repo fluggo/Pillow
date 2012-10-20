@@ -19,26 +19,26 @@ __version__ = "0.2"
 
 import string
 
-import Image, ImageFile
+from . import Image, ImageFile
 
 #
 # --------------------------------------------------------------------
 
 MODES = {
     # standard
-    "P4": "1",
-    "P5": "L",
-    "P6": "RGB",
+    b"P4": "1",
+    b"P5": "L",
+    b"P6": "RGB",
     # extensions
-    "P0CMYK": "CMYK",
+    b"P0CMYK": "CMYK",
     # PIL extensions (for test purposes only)
-    "PyP": "P",
-    "PyRGBA": "RGBA",
-    "PyCMYK": "CMYK"
+    b"PyP": "P",
+    b"PyRGBA": "RGBA",
+    b"PyCMYK": "CMYK"
 }
 
 def _accept(prefix):
-    return prefix[0] == "P" and prefix[1] in "0456y"
+    return prefix[0] == ord("P") and prefix[1] in b"0456y"
 
 ##
 # Image plugin for PBM, PGM, and PPM images.
@@ -48,10 +48,10 @@ class PpmImageFile(ImageFile.ImageFile):
     format = "PPM"
     format_description = "Pbmplus image"
 
-    def _token(self, s = ""):
+    def _token(self, s = b""):
         while 1: # read until next whitespace
             c = self.fp.read(1)
-            if not c or c in string.whitespace:
+            if not c or chr(c[0]) in string.whitespace:
                 break
             s = s + c
         return s
@@ -60,8 +60,8 @@ class PpmImageFile(ImageFile.ImageFile):
 
         # check magic
         s = self.fp.read(1)
-        if s != "P":
-            raise SyntaxError, "not a PPM file"
+        if s != b"P":
+            raise SyntaxError("not a PPM file")
         mode = MODES[self._token(s)]
 
         if mode == "1":
@@ -74,9 +74,9 @@ class PpmImageFile(ImageFile.ImageFile):
             while 1:
                 while 1:
                     s = self.fp.read(1)
-                    if s not in string.whitespace:
+                    if chr(s[0]) not in string.whitespace:
                         break
-                if s != "#":
+                if s != b"#":
                     break
                 s = self.fp.readline()
             s = int(self._token(s))
@@ -103,18 +103,18 @@ class PpmImageFile(ImageFile.ImageFile):
 
 def _save(im, fp, filename):
     if im.mode == "1":
-        rawmode, head = "1;I", "P4"
+        rawmode, head = "1;I", b"P4"
     elif im.mode == "L":
-        rawmode, head = "L", "P5"
+        rawmode, head = "L", b"P5"
     elif im.mode == "RGB":
-        rawmode, head = "RGB", "P6"
+        rawmode, head = "RGB", b"P6"
     elif im.mode == "RGBA":
-        rawmode, head = "RGB", "P6"
+        rawmode, head = "RGB", b"P6"
     else:
-        raise IOError, "cannot write mode %s as PPM" % im.mode
-    fp.write(head + "\n%d %d\n" % im.size)
-    if head != "P4":
-        fp.write("255\n")
+        raise IOError("cannot write mode %s as PPM" % im.mode)
+    fp.write(head + bytes("\n%d %d\n" % im.size, encoding='ascii'))
+    if head != b"P4":
+        fp.write(b"255\n")
     ImageFile._save(im, fp, [("raw", (0,0)+im.size, 0, (rawmode, 0, 1))])
 
     # ALTERNATIVE: save via builtin debug function

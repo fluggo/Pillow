@@ -1,0 +1,11 @@
+python make-manifest.py
+# hg kwexpand
+RELEASE=Imaging-`python -c "from PIL import Image; print Image.VERSION"`
+SOURCE=`basename $PWD`
+cd ..
+if [ ! -d $RELEASE ]
+then
+    ln -s $SOURCE $RELEASE
+fi
+tar cvf $RELEASE.tar `sed s/^Imaging/$RELEASE/g $RELEASE/CONTENTS`
+gzip $RELEASE.tar

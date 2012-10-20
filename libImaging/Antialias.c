@@ -73,7 +73,7 @@ static inline float bicubic_filter(float x)
     if (x < 1.0)
         return (((a + 2.0) * x) - (a + 3.0)) * x*x + 1;
     if (x < 2.0)
-        return (((a * x) - 5*a) * x + 8) * x - 4*a;
+        return (((a * x) - 5*a) * x + 8*a) * x - 4*a;
     return 0.0;
 #undef a
 }

@@ -22,6 +22,8 @@ Imaging/libImaging/QuantHeap.h
 Imaging/libImaging/QuantDefines.h
 Imaging/libImaging/QuantTypes.h
 
+Imaging/libImaging/Tiff.h
+Imaging/libImaging/TiffDecode.c
 Imaging/libImaging/Access.c
 Imaging/libImaging/Antialias.c
 Imaging/libImaging/Bands.c
@@ -101,7 +103,6 @@ Imaging/_imagingft.c
 Imaging/_imagingcms.c
 Imaging/_imagingmath.c
 
-Imaging/PIL.pth
 Imaging/PIL/__init__.py
 Imaging/PIL/ArgImagePlugin.py
 Imaging/PIL/BdfFontFile.py

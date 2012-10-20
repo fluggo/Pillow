@@ -1,7 +1,7 @@
 /*
  * The Python Imaging Library
  * $Id$
- * 
+ *
  * declarations for the imaging core library
  *
  * Copyright (c) 1997-2005 by Secret Labs AB
@@ -20,7 +20,7 @@ extern "C" {
 
 
 #ifndef M_PI
-#define	M_PI	3.14159265359
+#define    M_PI    3.14159265359
 #endif
 
 
@@ -29,17 +29,17 @@ extern "C" {
 /*
  * Image data organization:
  *
- * mode	    bytes	byte order
+ * mode        bytes    byte order
  * -------------------------------
- * 1	    1		1
- * L	    1		L
- * P	    1		P
+ * 1        1        1
+ * L        1        L
+ * P        1        P
  * I        4           I (32-bit integer, native byte order)
  * F        4           F (32-bit IEEE float, native byte order)
- * RGB	    4		R, G, B, -
- * RGBA	    4		R, G, B, A
- * CMYK	    4		C, M, Y, K
- * YCbCr    4		Y, Cb, Cr, -
+ * RGB        4        R, G, B, -
+ * RGBA        4        R, G, B, A
+ * CMYK        4        C, M, Y, K
+ * YCbCr    4        Y, Cb, Cr, -
  *
  * experimental modes (incomplete):
  * LA       4           L, -, -, A
@@ -75,26 +75,26 @@ typedef struct ImagingPaletteInstance* ImagingPalette;
 struct ImagingMemoryInstance {
 
     /* Format */
-    char mode[4+1];	/* Band names ("1", "L", "P", "RGB", "RGBA", "CMYK") */
-    int type;		/* Data type (IMAGING_TYPE_*) */
-    int depth;		/* Depth (ignored in this version) */
-    int bands;		/* Number of bands (1, 2, 3, or 4) */
-    int xsize;		/* Image dimension. */
+    char mode[6+1];    /* Band names ("1", "L", "P", "RGB", "RGBA", "CMYK") */
+    int type;        /* Data type (IMAGING_TYPE_*) */
+    int depth;        /* Depth (ignored in this version) */
+    int bands;        /* Number of bands (1, 2, 3, or 4) */
+    int xsize;        /* Image dimension. */
     int ysize;
 
     /* Colour palette (for "P" images only) */
     ImagingPalette palette;
 
     /* Data pointers */
-    UINT8 **image8;	/* Set for 8-bit images (pixelsize=1). */
-    INT32 **image32;	/* Set for 32-bit images (pixelsize=4). */
+    UINT8 **image8;    /* Set for 8-bit images (pixelsize=1). */
+    INT32 **image32;    /* Set for 32-bit images (pixelsize=4). */
 
     /* Internals */
-    char **image;	/* Actual raster data. */
-    char *block;	/* Set if data is allocated in a single block. */
+    char **image;    /* Actual raster data. */
+    char *block;    /* Set if data is allocated in a single block. */
 
-    int pixelsize;	/* Size of a pixel, in bytes (1, 2 or 4) */
-    int linesize;	/* Size of a line, in bytes (xsize * pixelsize) */
+    int pixelsize;    /* Size of a pixel, in bytes (1, 2 or 4) */
+    int linesize;    /* Size of a line, in bytes (xsize * pixelsize) */
 
     /* Virtual methods */
     void (*destroy)(Imaging im);
@@ -127,11 +127,11 @@ struct ImagingAccessInstance {
 struct ImagingHistogramInstance {
 
     /* Format */
-    char mode[4+1];	/* Band names (of corresponding source image) */
-    int bands;		/* Number of bands (1, 3, or 4) */
+    char mode[4+1];    /* Band names (of corresponding source image) */
+    int bands;        /* Number of bands (1, 3, or 4) */
 
     /* Data */
-    long *histogram;	/* Histogram (bands*256 longs) */
+    long *histogram;    /* Histogram (bands*256 longs) */
 
 };
 
@@ -139,13 +139,13 @@ struct ImagingHistogramInstance {
 struct ImagingPaletteInstance {
 
     /* Format */
-    char mode[4+1];	/* Band names */
+    char mode[4+1];    /* Band names */
 
     /* Data */
     UINT8 palette[1024];/* Palette data (same format as image data) */
 
-    INT16* cache;	/* Palette cache (used for predefined palettes) */
-    int keep_cache;	/* This palette will be reused; keep cache */
+    INT16* cache;    /* Palette cache (used for predefined palettes) */
+    int keep_cache;    /* This palette will be reused; keep cache */
 
 };
 
@@ -189,10 +189,10 @@ extern void           ImagingPaletteDelete(ImagingPalette palette);
 
 extern int  ImagingPaletteCachePrepare(ImagingPalette palette);
 extern void ImagingPaletteCacheUpdate(ImagingPalette palette,
-				      int r, int g, int b);
+                      int r, int g, int b);
 extern void ImagingPaletteCacheDelete(ImagingPalette palette);
 
-#define	ImagingPaletteCache(p, r, g, b)\
+#define    ImagingPaletteCache(p, r, g, b)\
     p->cache[(r>>2) + (g>>2)*64 + (b>>2)*64*64]
 
 extern Imaging ImagingQuantize(Imaging im, int colours, int mode, int kmeans);
@@ -288,16 +288,16 @@ extern Imaging ImagingRotate180(Imaging imOut, Imaging imIn);
 extern Imaging ImagingRotate270(Imaging imOut, Imaging imIn);
 extern Imaging ImagingStretch(Imaging imOut, Imaging imIn, int filter);
 extern Imaging ImagingTransformPerspective(
-    Imaging imOut, Imaging imIn, int x0, int y0, int x1, int y1, 
+    Imaging imOut, Imaging imIn, int x0, int y0, int x1, int y1,
     double a[8], int filter, int fill);
 extern Imaging ImagingTransformAffine(
-    Imaging imOut, Imaging imIn, int x0, int y0, int x1, int y1, 
+    Imaging imOut, Imaging imIn, int x0, int y0, int x1, int y1,
     double a[6], int filter, int fill);
 extern Imaging ImagingTransformQuad(
-    Imaging imOut, Imaging imIn, int x0, int y0, int x1, int y1, 
+    Imaging imOut, Imaging imIn, int x0, int y0, int x1, int y1,
     double a[8], int filter, int fill);
 extern Imaging ImagingTransform(
-    Imaging imOut, Imaging imIn, int x0, int y0, int x1, int y1, 
+    Imaging imOut, Imaging imIn, int x0, int y0, int x1, int y1,
     ImagingTransformMap transform, void* transform_data,
     ImagingTransformFilter filter, void* filter_data,
     int fill);
@@ -346,7 +346,7 @@ extern int ImagingDrawChord(Imaging im, int x0, int y0, int x1, int y1,
 extern int ImagingDrawEllipse(Imaging im, int x0, int y0, int x1, int y1,
                               const void* ink, int fill, int op);
 extern int ImagingDrawLine(Imaging im, int x0, int y0, int x1, int y1,
-			   const void* ink, int op);
+               const void* ink, int op);
 extern int ImagingDrawWideLine(Imaging im, int x0, int y0, int x1, int y1,
                                const void* ink, int width, int op);
 extern int ImagingDrawPieslice(Imaging im, int x0, int y0, int x1, int y1,
@@ -354,9 +354,9 @@ extern int ImagingDrawPieslice(Imaging im, int x0, int y0, int x1, int y1,
                                int op);
 extern int ImagingDrawPoint(Imaging im, int x, int y, const void* ink, int op);
 extern int ImagingDrawPolygon(Imaging im, int points, int *xy,
-			      const void* ink, int fill, int op);
+                  const void* ink, int fill, int op);
 extern int ImagingDrawRectangle(Imaging im, int x0, int y0, int x1, int y1,
-				const void* ink, int fill, int op);
+                const void* ink, int fill, int op);
 
 /* Level 2 graphics (WORK IN PROGRESS) */
 extern ImagingOutline ImagingOutlineNew(void);
@@ -370,7 +370,7 @@ extern int ImagingOutlineLine(ImagingOutline outline, float x, float y);
 extern int ImagingOutlineCurve(ImagingOutline outline, float x1, float y1,
                                 float x2, float y2, float x3, float y3);
 extern int ImagingOutlineTransform(ImagingOutline outline, double a[6]);
-                                   
+
 extern int ImagingOutlineClose(ImagingOutline outline);
 
 /* Special effects */
@@ -397,59 +397,63 @@ extern UINT32 ImagingCRC32(UINT32 crc, UINT8* buffer, int bytes);
 /* Codecs */
 typedef struct ImagingCodecStateInstance *ImagingCodecState;
 typedef int (*ImagingCodec)(Imaging im, ImagingCodecState state,
-			    UINT8* buffer, int bytes);
+                UINT8* buffer, int bytes);
 
 extern int ImagingBitDecode(Imaging im, ImagingCodecState state,
-			    UINT8* buffer, int bytes);
+                UINT8* buffer, int bytes);
 extern int ImagingEpsEncode(Imaging im, ImagingCodecState state,
-			    UINT8* buffer, int bytes);
+                UINT8* buffer, int bytes);
 extern int ImagingFliDecode(Imaging im, ImagingCodecState state,
-			    UINT8* buffer, int bytes);
+                UINT8* buffer, int bytes);
 extern int ImagingGifDecode(Imaging im, ImagingCodecState state,
-			    UINT8* buffer, int bytes);
+                UINT8* buffer, int bytes);
 extern int ImagingGifEncode(Imaging im, ImagingCodecState state,
-			    UINT8* buffer, int bytes);
+                UINT8* buffer, int bytes);
 extern int ImagingHexDecode(Imaging im, ImagingCodecState state,
-			    UINT8* buffer, int bytes);
-#ifdef	HAVE_LIBJPEG
+                UINT8* buffer, int bytes);
+#ifdef    HAVE_LIBJPEG
 extern int ImagingJpegDecode(Imaging im, ImagingCodecState state,
-			     UINT8* buffer, int bytes);
+                 UINT8* buffer, int bytes);
 extern int ImagingJpegEncode(Imaging im, ImagingCodecState state,
-			     UINT8* buffer, int bytes);
+                 UINT8* buffer, int bytes);
 #endif
 extern int ImagingLzwDecode(Imaging im, ImagingCodecState state,
-			    UINT8* buffer, int bytes);
-#ifdef	HAVE_LIBMPEG
+                UINT8* buffer, int bytes);
+#ifdef    HAVE_LIBTIFF
+extern int ImagingLibTiffDecode(Imaging im, ImagingCodecState state,
+                UINT8* buffer, int bytes);
+#endif
+#ifdef    HAVE_LIBMPEG
 extern int ImagingMpegDecode(Imaging im, ImagingCodecState state,
-			     UINT8* buffer, int bytes);
+                 UINT8* buffer, int bytes);
 #endif
 extern int ImagingMspDecode(Imaging im, ImagingCodecState state,
-			    UINT8* buffer, int bytes);
+                UINT8* buffer, int bytes);
 extern int ImagingPackbitsDecode(Imaging im, ImagingCodecState state,
-				 UINT8* buffer, int bytes);
+                 UINT8* buffer, int bytes);
 extern int ImagingPcdDecode(Imaging im, ImagingCodecState state,
-			    UINT8* buffer, int bytes);
+                UINT8* buffer, int bytes);
 extern int ImagingPcxDecode(Imaging im, ImagingCodecState state,
-			    UINT8* buffer, int bytes);
+                UINT8* buffer, int bytes);
 extern int ImagingPcxEncode(Imaging im, ImagingCodecState state,
-			    UINT8* buffer, int bytes);
+                UINT8* buffer, int bytes);
 extern int ImagingRawDecode(Imaging im, ImagingCodecState state,
-			    UINT8* buffer, int bytes);
+                UINT8* buffer, int bytes);
 extern int ImagingRawEncode(Imaging im, ImagingCodecState state,
-			    UINT8* buffer, int bytes);
+                UINT8* buffer, int bytes);
 extern int ImagingSunRleDecode(Imaging im, ImagingCodecState state,
-			       UINT8* buffer, int bytes);
+                   UINT8* buffer, int bytes);
 extern int ImagingTgaRleDecode(Imaging im, ImagingCodecState state,
-			       UINT8* buffer, int bytes);
+                   UINT8* buffer, int bytes);
 extern int ImagingXbmDecode(Imaging im, ImagingCodecState state,
-			    UINT8* buffer, int bytes);
+                UINT8* buffer, int bytes);
 extern int ImagingXbmEncode(Imaging im, ImagingCodecState state,
-			    UINT8* buffer, int bytes);
-#ifdef	HAVE_LIBZ
+                UINT8* buffer, int bytes);
+#ifdef    HAVE_LIBZ
 extern int ImagingZipDecode(Imaging im, ImagingCodecState state,
-			    UINT8* buffer, int bytes);
+                UINT8* buffer, int bytes);
 extern int ImagingZipEncode(Imaging im, ImagingCodecState state,
-			    UINT8* buffer, int bytes);
+                UINT8* buffer, int bytes);
 #endif
 
 typedef void (*ImagingShuffler)(UINT8* out, const UINT8* in, int pixels);
@@ -485,12 +489,12 @@ struct ImagingCodecStateInstance {
 };
 
 /* Errcodes */
-#define	IMAGING_CODEC_END	 1
-#define	IMAGING_CODEC_OVERRUN	-1
-#define	IMAGING_CODEC_BROKEN	-2
-#define	IMAGING_CODEC_UNKNOWN	-3
-#define	IMAGING_CODEC_CONFIG	-8
-#define	IMAGING_CODEC_MEMORY	-9
+#define    IMAGING_CODEC_END     1
+#define    IMAGING_CODEC_OVERRUN    -1
+#define    IMAGING_CODEC_BROKEN    -2
+#define    IMAGING_CODEC_UNKNOWN    -3
+#define    IMAGING_CODEC_CONFIG    -8
+#define    IMAGING_CODEC_MEMORY    -9
 
 #if defined(__cplusplus)
 }

@@ -17,7 +17,7 @@
 # See the README file for information on usage and redistribution.
 #
 
-import Image
+from . import Image
 import re, string
 
 try:
@@ -43,7 +43,7 @@ def getrgb(color):
     except KeyError:
         try:
             # fall back on case-insensitive lookup
-            rgb = colormap[string.lower(color)]
+            rgb = colormap[color.lower()]
         except KeyError:
             rgb = None
     # found color in cache

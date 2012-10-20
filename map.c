@@ -29,11 +29,17 @@
 
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
+#undef INT8
+#undef INT16
 #undef INT32
 #undef INT64
+#undef UINT8
+#undef UINT16
 #undef UINT32
 #include "windows.h"
 #endif
+
+#include "py3.h"
 
 /* compatibility wrappers (defined in _imaging.c) */
 extern int PyImaging_CheckBuffer(PyObject* buffer);
@@ -60,11 +66,15 @@ PyImaging_MapperNew(const char* filename, int readonly)
 {
     ImagingMapperObject *mapper;
 
+#ifdef PY3
+    Py_TYPE(&ImagingMapperType) = &PyType_Type;
+#else
     ImagingMapperType.ob_type = &PyType_Type;
+#endif
 
     mapper = PyObject_New(ImagingMapperObject, &ImagingMapperType);
     if (mapper == NULL)
-	return NULL;
+    return NULL;
 
     mapper->base = NULL;
     mapper->size = mapper->offset = 0;
@@ -92,7 +102,7 @@ PyImaging_MapperNew(const char* filename, int readonly)
         PAGE_READONLY,
         0, 0, NULL);
     if (mapper->hMap == (HANDLE)-1) {
-	CloseHandle(mapper->hFile);
+        CloseHandle(mapper->hFile);
         PyErr_SetString(PyExc_IOError, "cannot map file");
         PyObject_Del(mapper);
         return NULL;
@@ -114,11 +124,11 @@ mapping_dealloc(ImagingMapperObject* mapper)
 {
 #ifdef WIN32
     if (mapper->base != 0)
-	UnmapViewOfFile(mapper->base);
+        UnmapViewOfFile(mapper->base);
     if (mapper->hMap != (HANDLE)-1)
-	CloseHandle(mapper->hMap);
+        CloseHandle(mapper->hMap);
     if (mapper->hFile != (HANDLE)-1)
-	CloseHandle(mapper->hFile);
+        CloseHandle(mapper->hFile);
     mapper->base = 0;
     mapper->hMap = mapper->hFile = (HANDLE)-1;
 #endif
@@ -135,7 +145,7 @@ mapping_read(ImagingMapperObject* mapper, PyObject* args)
 
     int size = -1;
     if (!PyArg_ParseTuple(args, "|i", &size))
-	return NULL;
+        return NULL;
 
     /* check size */
     if (size < 0 || mapper->offset + size > mapper->size)
@@ -145,7 +155,7 @@ mapping_read(ImagingMapperObject* mapper, PyObject* args)
 
     buf = PyString_FromStringAndSize(NULL, size);
     if (!buf)
-	return NULL;
+        return NULL;
 
     if (size > 0) {
         memcpy(PyString_AsString(buf), mapper->base + mapper->offset, size);
@@ -161,7 +171,7 @@ mapping_seek(ImagingMapperObject* mapper, PyObject* args)
     int offset;
     int whence = 0;
     if (!PyArg_ParseTuple(args, "i|i", &offset, &whence))
-	return NULL;
+        return NULL;
 
     switch (whence) {
         case 0: /* SEEK_SET */
@@ -206,7 +216,7 @@ mapping_readimage(ImagingMapperObject* mapper, PyObject* args)
     int orientation;
     if (!PyArg_ParseTuple(args, "s(ii)ii", &mode, &xsize, &ysize,
                           &stride, &orientation))
-	return NULL;
+        return NULL;
 
     if (stride <= 0) {
         /* FIXME: maybe we should call ImagingNewPrologue instead */
@@ -256,26 +266,58 @@ static struct PyMethodDef methods[] = {
     {NULL, NULL} /* sentinel */
 };
 
+#ifndef PY3
 static PyObject*  
 mapping_getattr(ImagingMapperObject* self, char* name)
 {
     return Py_FindMethod(methods, (PyObject*) self, name);
 }
+#endif
 
+#ifdef PY3
+static PyTypeObject ImagingMapperType = {
+    PyVarObject_HEAD_INIT(0,0)
+#else
 statichere PyTypeObject ImagingMapperType = {
-	PyObject_HEAD_INIT(NULL)
-	0,				/*ob_size*/
-	"ImagingMapper",		/*tp_name*/
-	sizeof(ImagingMapperObject),	/*tp_size*/
-	0,				/*tp_itemsize*/
-	/* methods */
-	(destructor)mapping_dealloc,	/*tp_dealloc*/
-	0,				/*tp_print*/
-	(getattrfunc)mapping_getattr,	/*tp_getattr*/
-	0,				/*tp_setattr*/
-	0,				/*tp_compare*/
-	0,				/*tp_repr*/
-	0,                              /*tp_hash*/
+    PyObject_HEAD_INIT(NULL)
+    0,                             /*ob_size*/
+#endif
+    "ImagingMapper",               /*tp_name*/
+    sizeof(ImagingMapperObject),   /*tp_size*/
+    0,                             /*tp_itemsize*/
+    /* methods */
+    (destructor)mapping_dealloc,   /*tp_dealloc*/
+    0,                             /*tp_print*/
+#ifdef PY3
+    0,                             /* tp_getattr */
+    0,                             /* tp_setattr */
+    0,                             /* tp_compare */
+    0,                             /* tp_repr */
+    0,                             /* tp_as_number */
+    0,                             /* tp_as_sequence */
+    0,                             /* tp_as_mapping */
+    0,                             /* tp_hash */
+    0,                             /* tp_call */
+    0,                             /* tp_str */
+    0,                             /* tp_getattro */
+    0,                             /* tp_setattro */
+    0,                             /* tp_as_buffer */
+    0,                             /* tp_flags */
+    0,                             /* tp_doc */
+    0,                             /* tp_traverse */
+    0,                             /* tp_clear */
+    0,                             /* tp_richcompare */
+    0,                             /* tp_weaklistoffset */
+    0,                             /* tp_iter */
+    0,                             /* tp_iternext */
+    methods,                       /* tp_methods */
+#else
+    (getattrfunc)mapping_getattr,  /*tp_getattr*/
+    0,                             /*tp_setattr*/
+    0,                             /*tp_compare*/
+    0,                             /*tp_repr*/
+    0,                             /*tp_hash*/
+#endif
 };
 
 PyObject* 
@@ -283,7 +325,7 @@ PyImaging_Mapper(PyObject* self, PyObject* args)
 {
     char* filename;
     if (!PyArg_ParseTuple(args, "s", &filename))
-	return NULL;
+    return NULL;
 
     return (PyObject*) PyImaging_MapperNew(filename, 1);
 }
@@ -323,7 +365,7 @@ PyImaging_MapBuffer(PyObject* self, PyObject* args)
 
     if (!PyArg_ParseTuple(args, "O(ii)sOi(sii)", &target, &xsize, &ysize,
                           &codec, &bbox, &offset, &mode, &stride, &ystep))
-	return NULL;
+    return NULL;
 
     if (!PyImaging_CheckBuffer(target)) {
         PyErr_SetString(PyExc_TypeError, "expected string or buffer");

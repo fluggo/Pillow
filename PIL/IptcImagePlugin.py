@@ -19,7 +19,7 @@
 __version__ = "0.3"
 
 
-import Image, ImageFile
+from . import Image, ImageFile
 import os, tempfile
 
 
@@ -34,18 +34,18 @@ PAD = chr(0) * 4
 # Helpers
 
 def i16(c):
-    return ord(c[1]) + (ord(c[0])<<8)
+    return c[1] + (c[0] << 8)
 
 def i32(c):
-    return ord(c[3]) + (ord(c[2])<<8) + (ord(c[1])<<16) + (ord(c[0])<<24)
+    return c[3] + (c[2] << 8) + (c[1] << 16) + (c[0] << 24)
 
 def i(c):
     return i32((PAD + c)[-4:])
 
 def dump(c):
     for i in c:
-        print "%02x" % ord(i),
-    print
+        print("%02x" % ord(i), end=' ')
+    print()
 
 ##
 # Image plugin for IPTC/NAA datastreams.  To read IPTC/NAA fields
@@ -66,16 +66,16 @@ class IptcImageFile(ImageFile.ImageFile):
         if not len(s):
             return None, 0
 
-        tag = ord(s[1]), ord(s[2])
+        tag = s[1], s[2]
 
         # syntax
-        if ord(s[0]) != 0x1C or tag[0] < 1 or tag[0] > 9:
-            raise SyntaxError, "invalid IPTC/NAA file"
+        if s[0] != 0x1C or tag[0] < 1 or tag[0] > 9:
+            raise SyntaxError("invalid IPTC/NAA file")
 
         # field size
-        size = ord(s[3])
+        size = s[3]
         if size > 132:
-            raise IOError, "illegal field length in IPTC/NAA file"
+            raise IOError("illegal field length in IPTC/NAA file")
         elif size == 128:
             size = 0
         elif size > 128:
@@ -119,7 +119,7 @@ class IptcImageFile(ImageFile.ImageFile):
                 tagdata = self.fp.read(size)
             else:
                 tagdata = None
-            if tag in self.info.keys():
+            if tag in list(self.info.keys()):
                 if isinstance(self.info[tag], list):
                     self.info[tag].append(tagdata)
                 else:
@@ -132,7 +132,7 @@ class IptcImageFile(ImageFile.ImageFile):
         # mode
         layers = ord(self.info[(3,60)][0])
         component = ord(self.info[(3,60)][1])
-        if self.info.has_key((3,65)):
+        if (3,65) in self.info:
             id = ord(self.info[(3,65)][0])-1
         else:
             id = 0
@@ -150,7 +150,7 @@ class IptcImageFile(ImageFile.ImageFile):
         try:
             compression = COMPRESSION[self.getint((3,120))]
         except KeyError:
-            raise IOError, "Unknown IPTC image compression"
+            raise IOError("Unknown IPTC image compression")
 
         # tile
         if tag == (8,10):
@@ -178,7 +178,7 @@ class IptcImageFile(ImageFile.ImageFile):
         if encoding == "raw":
             # To simplify access to the extracted file,
             # prepend a PPM header
-            o.write("P5\n%d %d\n255\n" % self.size)
+            o.write(bytes("P5\n%d %d\n255\n" % self.size, encoding='ascii'))
         while 1:
             type, size = self.field()
             if type != (8, 10):
@@ -218,8 +218,8 @@ Image.register_extension("IPTC", ".iim")
 
 def getiptcinfo(im):
 
-    import TiffImagePlugin, JpegImagePlugin
-    import StringIO
+    from . import TiffImagePlugin, JpegImagePlugin
+    import io
 
     data = None
 
@@ -278,7 +278,7 @@ def getiptcinfo(im):
 
     # parse the IPTC information chunk
     im.info = {}
-    im.fp = StringIO.StringIO(data)
+    im.fp = io.StringIO(data)
 
     try:
         im._open()

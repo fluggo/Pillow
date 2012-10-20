@@ -17,28 +17,26 @@
 # See the README file for information on usage and redistribution.
 #
 
-import Image
-import FontFile
-
-import string
+from . import Image
+from . import FontFile
 
 # --------------------------------------------------------------------
 # parse X Bitmap Distribution Format (BDF)
 # --------------------------------------------------------------------
 
 bdf_slant = {
-   "R": "Roman",
-   "I": "Italic",
-   "O": "Oblique",
-   "RI": "Reverse Italic",
-   "RO": "Reverse Oblique",
-   "OT": "Other"
+   b"R": b"Roman",
+   b"I": b"Italic",
+   b"O": b"Oblique",
+   b"RI": b"Reverse Italic",
+   b"RO": b"Reverse Oblique",
+   b"OT": b"Other"
 }
 
 bdf_spacing = {
-    "P": "Proportional",
-    "M": "Monospaced",
-    "C": "Cell"
+    b"P": b"Proportional",
+    b"M": b"Monospaced",
+    b"C": b"Cell"
 }
 
 def bdf_char(f):
@@ -48,40 +46,40 @@ def bdf_char(f):
         s = f.readline()
         if not s:
             return None
-        if s[:9] == "STARTCHAR":
+        if s[:9] == b"STARTCHAR":
             break
-    id = string.strip(s[9:])
+    id = s[9:].strip()
 
     # load symbol properties
     props = {}
     while 1:
         s = f.readline()
-        if not s or s[:6] == "BITMAP":
+        if not s or s[:6] == b"BITMAP":
             break
-        i = string.find(s, " ")
+        i = s.find(b" ")
         props[s[:i]] = s[i+1:-1]
 
     # load bitmap
     bitmap = []
     while 1:
         s = f.readline()
-        if not s or s[:7] == "ENDCHAR":
+        if not s or s[:7] == b"ENDCHAR":
             break
         bitmap.append(s[:-1])
-    bitmap = string.join(bitmap, "")
+    bitmap = b"".join(bitmap)
 
-    [x, y, l, d] = map(int, string.split(props["BBX"]))
-    [dx, dy] = map(int, string.split(props["DWIDTH"]))
+    [x, y, l, d] = list(map(int, props[b"BBX"].split()))
+    [dx, dy] = list(map(int, props[b"DWIDTH"].split()))
 
     bbox = (dx, dy), (l, -d-y, x+l, -d), (0, 0, x, y)
 
     try:
-        im = Image.fromstring("1", (x, y), bitmap, "hex", "1")
+        im = Image.frombytes("1", (x, y), bitmap, "hex", "1")
     except ValueError:
         # deal with zero-width characters
         im = Image.new("1", (x, y))
 
-    return id, int(props["ENCODING"]), bbox, im
+    return id, int(props[b"ENCODING"]), bbox, im
 
 ##
 # Font file plugin for the X11 BDF format.
@@ -93,31 +91,31 @@ class BdfFontFile(FontFile.FontFile):
         FontFile.FontFile.__init__(self)
 
         s = fp.readline()
-        if s[:13] != "STARTFONT 2.1":
-            raise SyntaxError, "not a valid BDF file"
+        if s[:13] != b"STARTFONT 2.1":
+            raise SyntaxError("not a valid BDF file")
 
         props = {}
         comments = []
 
         while 1:
             s = fp.readline()
-            if not s or s[:13] == "ENDPROPERTIES":
+            if not s or s[:13] == b"ENDPROPERTIES":
                 break
-            i = string.find(s, " ")
+            i = s.find(b" ")
             props[s[:i]] = s[i+1:-1]
-            if s[:i] in ["COMMENT", "COPYRIGHT"]:
-                if string.find(s, "LogicalFontDescription") < 0:
+            if s[:i] in [b"COMMENT", b"COPYRIGHT"]:
+                if s.find(b"LogicalFontDescription") < 0:
                     comments.append(s[i+1:-1])
 
-        font = string.split(props["FONT"], "-")
+        font = props[b"FONT"].split(b"-")
 
-        font[4] = bdf_slant[string.upper(font[4])]
-        font[11] = bdf_spacing[string.upper(font[11])]
+        font[4] = bdf_slant[font[4].upper()]
+        font[11] = bdf_spacing[font[11].upper()]
 
-        ascent = int(props["FONT_ASCENT"])
-        descent = int(props["FONT_DESCENT"])
+        ascent = int(props[b"FONT_ASCENT"])
+        descent = int(props[b"FONT_DESCENT"])
 
-        fontname = string.join(font[1:], ";")
+        fontname = b";".join(font[1:])
 
         # print "#", fontname
         # for i in comments:

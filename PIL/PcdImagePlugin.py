@@ -18,7 +18,7 @@
 __version__ = "0.1"
 
 
-import Image, ImageFile
+from . import Image, ImageFile
 
 ##
 # Image plugin for PhotoCD images.  This plugin only reads the 768x512
@@ -37,7 +37,7 @@ class PcdImageFile(ImageFile.ImageFile):
         s = self.fp.read(2048)
 
         if s[:4] != "PCD_":
-            raise SyntaxError, "not a PCD file"
+            raise SyntaxError("not a PCD file")
 
         orientation = ord(s[1538]) & 3
         if orientation == 1:

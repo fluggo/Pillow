@@ -6,13 +6,14 @@
 #
 # History:
 # 2008-04-06 fl   Created
+# 2010-04-25 fl   Don't mess up if multiple viewers are available.
 #
-# Copyright (c) Secret Labs AB 2008.
+# Copyright (c) Secret Labs AB 2008-2010.
 #
 # See the README file for information on usage and redistribution.
 #
 
-import Image
+from . import Image
 import os, sys
 
 _viewers = []
@@ -63,7 +64,7 @@ class Viewer:
         if base != image.mode and image.mode != "1":
             image = image.convert(base)
 
-        self.show_image(image, **options)
+        return self.show_image(image, **options)
 
     # hook methods
 
@@ -96,7 +97,7 @@ if sys.platform == "win32":
     class WindowsViewer(Viewer):
         format = "BMP"
         def get_command(self, file, **options):
-            return "start /wait %s && del /f %s" % (file, file)
+            return "start /wait %s && ping -n 2 127.0.0.1 >NUL && del /f %s" % (file, file)
 
     register(WindowsViewer)
 
@@ -160,4 +161,4 @@ else:
 
 if __name__ == "__main__":
     # usage: python ImageShow.py imagefile [title]
-    print show(Image.open(sys.argv[1]), *sys.argv[2:])
+    print(show(Image.open(sys.argv[1]), *sys.argv[2:]))

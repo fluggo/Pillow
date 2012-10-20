@@ -20,7 +20,7 @@
 # images, you can convert it to a GIF animation using some-
 # thing like the following code:
 #
-#       import Image
+#       from PIL import Image
 #       import gifmaker
 #
 #       sequence = []
@@ -40,7 +40,6 @@
 #
 
 from PIL import Image, ImageChops
-import string
 
 from PIL.GifImagePlugin import getheader, getdata
 
@@ -100,7 +99,7 @@ def makedelta(fp, sequence):
 
         frames = frames + 1
 
-    fp.write(";")
+    fp.write(b";")
 
     return frames
 
@@ -128,8 +127,8 @@ if __name__ == "__main__":
     import sys
 
     if len(sys.argv) < 3:
-        print "GIFMAKER -- create GIF animations"
-        print "Usage: gifmaker infile outfile"
+        print("GIFMAKER -- create GIF animations")
+        print("Usage: gifmaker infile outfile")
         sys.exit(1)
 
     compress(sys.argv[1], sys.argv[2])

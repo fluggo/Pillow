@@ -55,6 +55,8 @@
 #define FT_LOAD_TARGET_MONO  FT_LOAD_MONOCHROME
 #endif
 
+#include "py3.h"
+
 /* -------------------------------------------------------------------- */
 /* error table */
 
@@ -118,7 +120,7 @@ getfont(PyObject* self_, PyObject* args, PyObject* kw)
         "filename", "size", "index", "encoding", NULL
     };
 
-#if defined(HAVE_UNICODE) && PY_VERSION_HEX >= 0x02020000
+#ifndef PY3 && defined(HAVE_UNICODE) && PY_VERSION_HEX >= 0x02020000
     if (!PyArg_ParseTupleAndKeywords(args, kw, "eti|is", kwlist,
                                      Py_FileSystemDefaultEncoding, &filename,
                                      &size, &index, &encoding))
@@ -160,10 +162,18 @@ getfont(PyObject* self_, PyObject* args, PyObject* kw)
 
     return (PyObject*) self;
 }
-    
+
 static int
 font_getchar(PyObject* string, int index, FT_ULong* char_out)
 {
+#ifdef PY3
+    Py_UNICODE* p = PyUnicode_AS_UNICODE(string);
+    int size = PyUnicode_GET_SIZE(string);
+    if (index >= size)
+        return 0;
+    *char_out = p[index];
+    return 1;
+#else
 #if defined(HAVE_UNICODE)
     if (PyUnicode_Check(string)) {
         Py_UNICODE* p = PyUnicode_AS_UNICODE(string);
@@ -183,6 +193,7 @@ font_getchar(PyObject* string, int index, FT_ULong* char_out)
         return 1;
     }
     return 0;
+#endif
 }
 
 static PyObject*
@@ -201,10 +212,14 @@ font_getsize(FontObject* self, PyObject* args)
     if (!PyArg_ParseTuple(args, "O:getsize", &string))
         return NULL;
 
+#ifdef PY3
+    if (!PyUnicode_Check(string)) {
+#else
 #if defined(HAVE_UNICODE)
     if (!PyUnicode_Check(string) && !PyString_Check(string)) {
 #else
     if (!PyString_Check(string)) {
+#endif
 #endif
         PyErr_SetString(PyExc_TypeError, "expected string");
         return NULL;
@@ -249,7 +264,8 @@ font_getsize(FontObject* self, PyObject* args)
 
     return Py_BuildValue(
         "(ii)(ii)",
-        PIXEL(x), PIXEL(self->face->size->metrics.height),
+        PIXEL(x), PIXEL(max(self->face->size->metrics.height,
+                        self->face->bbox.yMax - self->face->bbox.yMin)),
         PIXEL(xoffset), 0
         );
 }
@@ -267,10 +283,14 @@ font_getabc(FontObject* self, PyObject* args)
     if (!PyArg_ParseTuple(args, "O:getabc", &string))
         return NULL;
 
+#ifdef PY3
+    if (!PyUnicode_Check(string)) {
+#else
 #if defined(HAVE_UNICODE)
     if (!PyUnicode_Check(string) && !PyString_Check(string)) {
 #else
     if (!PyString_Check(string)) {
+#endif
 #endif
         PyErr_SetString(PyExc_TypeError, "expected string");
         return NULL;
@@ -285,7 +305,7 @@ font_getabc(FontObject* self, PyObject* args)
             return geterror(error);
         a = face->glyph->metrics.horiBearingX / 64.0;
         b = face->glyph->metrics.width / 64.0;
-        c = (face->glyph->metrics.horiAdvance - 
+        c = (face->glyph->metrics.horiAdvance -
              face->glyph->metrics.horiBearingX -
              face->glyph->metrics.width) / 64.0;
     } else
@@ -299,7 +319,7 @@ font_render(FontObject* self, PyObject* args)
 {
     int i, x, y;
     Imaging im;
-    int index, error, ascender;
+    int index, error, ascender, descender;
     int load_flags;
     unsigned char *source;
     FT_ULong ch;
@@ -310,15 +330,19 @@ font_render(FontObject* self, PyObject* args)
     /* render string into given buffer (the buffer *must* have
        the right size, or this will crash) */
     PyObject* string;
-    long id;
+    Py_ssize_t id;
     int mask = 0;
-    if (!PyArg_ParseTuple(args, "Ol|i:render", &string, &id, &mask))
+    if (!PyArg_ParseTuple(args, "On|i:render", &string, &id, &mask))
         return NULL;
 
+#ifdef PY3
+    if (!PyUnicode_Check(string)) {
+#else
 #if defined(HAVE_UNICODE)
     if (!PyUnicode_Check(string) && !PyString_Check(string)) {
 #else
     if (!PyString_Check(string)) {
+#endif
 #endif
         PyErr_SetString(PyExc_TypeError, "expected string");
         return NULL;
@@ -331,24 +355,25 @@ font_render(FontObject* self, PyObject* args)
         load_flags |= FT_LOAD_TARGET_MONO;
 
     for (x = i = 0; font_getchar(string, i, &ch); i++) {
+        index = FT_Get_Char_Index(self->face, ch);
+        error = FT_Load_Glyph(self->face, index, load_flags);
+        if (error)
+            return geterror(error);
         if (i == 0 && self->face->glyph->metrics.horiBearingX < 0)
             x = -PIXEL(self->face->glyph->metrics.horiBearingX);
-        index = FT_Get_Char_Index(self->face, ch);
         if (kerning && last_index && index) {
             FT_Vector delta;
             FT_Get_Kerning(self->face, last_index, index, ft_kerning_default,
                            &delta);
             x += delta.x >> 6;
         }
-        error = FT_Load_Glyph(self->face, index, load_flags);
-        if (error)
-            return geterror(error);
         glyph = self->face->glyph;
         if (mask) {
             /* use monochrome mask (on palette images, etc) */
             int xx, x0, x1;
             source = (unsigned char*) glyph->bitmap.buffer;
             ascender = PIXEL(self->face->size->metrics.ascender);
+            descender = PIXEL(self->face->size->metrics.descender);
             xx = x + glyph->bitmap_left;
             x0 = 0;
             x1 = glyph->bitmap.width;
@@ -378,6 +403,7 @@ font_render(FontObject* self, PyObject* args)
             int xx, x0, x1;
             source = (unsigned char*) glyph->bitmap.buffer;
             ascender = PIXEL(self->face->size->metrics.ascender);
+            descender = PIXEL(self->face->size->metrics.descender);
             xx = x + glyph->bitmap_left;
             x0 = 0;
             x1 = glyph->bitmap.width;
@@ -420,13 +446,17 @@ static PyMethodDef font_methods[] = {
     {NULL, NULL}
 };
 
-static PyObject*  
+static PyObject*
 font_getattr(FontObject* self, char* name)
 {
     PyObject* res;
 
+#ifdef PY3
+    res = PyObject_GenericGetAttr((PyObject *)self,
+                                   PyUnicode_FromString(name));
+#else
     res = Py_FindMethod(font_methods, (PyObject*) self, name);
-
+#endif
     if (res)
         return res;
 
@@ -435,12 +465,20 @@ font_getattr(FontObject* self, char* name)
     /* attributes */
     if (!strcmp(name, "family")) {
         if (self->face->family_name)
+#ifdef PY3
+            return PyUnicode_FromString(self->face->family_name);
+#else
             return PyString_FromString(self->face->family_name);
+#endif
         Py_RETURN_NONE;
     }
     if (!strcmp(name, "style")) {
         if (self->face->style_name)
+#ifdef PY3
+            return PyUnicode_FromString(self->face->style_name);
+#else
             return PyString_FromString(self->face->style_name);
+#endif
         Py_RETURN_NONE;
     }
     if (!strcmp(name, "ascent"))
@@ -456,13 +494,42 @@ font_getattr(FontObject* self, char* name)
     return NULL;
 }
 
+#ifdef PY3
+static PyTypeObject Font_Type = {
+    PyVarObject_HEAD_INIT(0,0)
+#else
 statichere PyTypeObject Font_Type = {
     PyObject_HEAD_INIT(NULL)
-    0, "Font", sizeof(FontObject), 0,
+    0,                          /*ob_size*/
+#endif
+    "Font", sizeof(FontObject), 0,
     /* methods */
-    (destructor)font_dealloc, /* tp_dealloc */
-    0, /* tp_print */
-    (getattrfunc)font_getattr, /* tp_getattr */
+    (destructor)font_dealloc,   /* tp_dealloc */
+    0,                          /* tp_print */
+    (getattrfunc)font_getattr,  /* tp_getattr */
+#ifdef PY3
+    0,                          /* tp_setattr */
+    0,                          /* tp_compare */
+    0,                          /* tp_repr */
+    0,                          /* tp_as_number */
+    0,                          /* tp_as_sequence */
+    0,                          /* tp_as_mapping */
+    0,                          /* tp_hash */
+    0,                          /* tp_call */
+    0,                          /* tp_str */
+    0,                          /* tp_getattro */
+    0,                          /* tp_setattro */
+    0,                          /* tp_as_buffer */
+    0,                          /* tp_flags */
+    0,                          /* tp_doc */
+    0,                          /* tp_traverse */
+    0,                          /* tp_clear */
+    0,                          /* tp_richcompare */
+    0,                          /* tp_weaklistoffset */
+    0,                          /* tp_iter */
+    0,                          /* tp_iternext */
+    font_methods,               /* tp_methods */
+#endif
 };
 
 static PyMethodDef _functions[] = {
@@ -470,6 +537,32 @@ static PyMethodDef _functions[] = {
     {NULL, NULL}
 };
 
+
+#ifdef PY3
+
+static struct PyModuleDef _imagingft_module = {
+    PyModuleDef_HEAD_INIT,     /* m_base */
+    "_imagingft",              /* m_name */
+    NULL,                      /* m_doc */
+    -1,                        /* m_size */
+    _functions,                /* m_methods */
+};
+
+PyMODINIT_FUNC
+PyInit__imagingft(void)
+{
+    PyObject* m;
+    PyObject* d;
+    PyObject* v;
+    int major, minor, patch;
+
+    /* Patch object type */
+    Py_TYPE(&Font_Type) = &PyType_Type;
+
+    m = PyModule_Create(&_imagingft_module);
+    d = PyModule_GetDict(m);
+
+#else
 DL_EXPORT(void)
 init_imagingft(void)
 {
@@ -483,12 +576,16 @@ init_imagingft(void)
 
     m = Py_InitModule("_imagingft", _functions);
     d = PyModule_GetDict(m);
+#endif
 
     if (FT_Init_FreeType(&library))
-        return; /* leave it uninitalized */
+        return NULL; /* leave it uninitalized */
 
     FT_Library_Version(library, &major, &minor, &patch);
 
+#ifdef PY3
+    v = PyUnicode_FromFormat("%d.%d.%d", major, minor, patch);
+#else
 #if PY_VERSION_HEX >= 0x02020000
     v = PyString_FromFormat("%d.%d.%d", major, minor, patch);
 #else
@@ -498,5 +595,10 @@ init_imagingft(void)
         v = PyString_FromString(buffer);
     }
 #endif
+#endif
     PyDict_SetItemString(d, "freetype2_version", v);
+
+#ifdef PY3
+    return m;
+#endif
 }
