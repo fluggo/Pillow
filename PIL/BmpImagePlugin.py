@@ -26,9 +26,8 @@
 
 __version__ = "0.7"
 
-
-import string
-import Image, ImageFile, ImagePalette
+import sys
+from PIL import Image, ImageFile, ImagePalette
 
 
 #
@@ -36,10 +35,16 @@ import Image, ImageFile, ImagePalette
 # Read BMP file
 
 def i16(c):
-    return ord(c[0]) + (ord(c[1])<<8)
+    if sys.version_info[0] == 3:
+        return c[0] + (c[1]<<8)
+    else:
+        return ord(c[0]) + (ord(c[1])<<8)
 
 def i32(c):
-    return ord(c[0]) + (ord(c[1])<<8) + (ord(c[2])<<16) + (ord(c[3])<<24)
+    if sys.version_info[0] == 3:
+        return c[0] + (c[1]<<8) + (c[2]<<16) + (c[3]<<24)
+    else:
+        return ord(c[0]) + (ord(c[1])<<8) + (ord(c[2])<<16) + (ord(c[3])<<24)
 
 
 BIT2MODE = {
@@ -53,7 +58,7 @@ BIT2MODE = {
 }
 
 def _accept(prefix):
-    return prefix[:2] == "BM"
+    return prefix[:2] == b"BM"
 
 ##
 # Image plugin for the Windows BMP format.
@@ -132,7 +137,7 @@ class BmpImageFile(ImageFile.ImageFile):
             if colors == 2:
                 indices = (0, 255)
             else:
-                indices = range(colors)
+                indices = list(range(colors))
             for i in indices:
                 rgb = read(lutsize)[:3]
                 if rgb != chr(i)*3:
@@ -146,7 +151,7 @@ class BmpImageFile(ImageFile.ImageFile):
             else:
                 self.mode = "P"
                 self.palette = ImagePalette.raw(
-                    "BGR", string.join(palette, "")
+                    "BGR", b"".join(palette)
                     )
 
         if not offset:
@@ -163,7 +168,7 @@ class BmpImageFile(ImageFile.ImageFile):
 
         # HEAD
         s = self.fp.read(14)
-        if s[:2] != "BM":
+        if s[:2] != b"BM":
             raise SyntaxError("Not a BMP file")
         offset = i32(s[10:])
 

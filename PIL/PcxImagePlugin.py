@@ -27,13 +27,23 @@
 
 __version__ = "0.6"
 
-import Image, ImageFile, ImagePalette
+import sys
+from PIL import Image, ImageFile, ImagePalette
 
-def i16(c,o):
-    return ord(c[o]) + (ord(c[o+1])<<8)
+def c2i(c):
+    if sys.version_info[0] < 3:
+        return ord(c)
+    else:
+        return c
+
+def i16(c, o):
+    if sys.version_info[0] < 3:
+        return ord(c[o]) + (ord(c[o+1])<<8)
+    else:
+        return c[o] + (c[o+1]<<8)
 
 def _accept(prefix):
-    return ord(prefix[0]) == 10 and ord(prefix[1]) in [0, 2, 3, 5]
+    return c2i(prefix[0]) == 10 and c2i(prefix[1]) in [0, 2, 3, 5]
 
 ##
 # Image plugin for Paintbrush images.
@@ -48,17 +58,17 @@ class PcxImageFile(ImageFile.ImageFile):
         # header
         s = self.fp.read(128)
         if not _accept(s):
-            raise SyntaxError, "not a PCX file"
+            raise SyntaxError("not a PCX file")
 
         # image
         bbox = i16(s,4), i16(s,6), i16(s,8)+1, i16(s,10)+1
         if bbox[2] <= bbox[0] or bbox[3] <= bbox[1]:
-            raise SyntaxError, "bad PCX image size"
+            raise SyntaxError("bad PCX image size")
 
         # format
-        version = ord(s[1])
-        bits = ord(s[3])
-        planes = ord(s[65])
+        version = c2i(s[1])
+        bits = c2i(s[3])
+        planes = c2i(s[65])
         stride = i16(s,66)
 
         self.info["dpi"] = i16(s,12), i16(s,14)
@@ -76,7 +86,7 @@ class PcxImageFile(ImageFile.ImageFile):
             # FIXME: hey, this doesn't work with the incremental loader !!!
             self.fp.seek(-769, 2)
             s = self.fp.read(769)
-            if len(s) == 769 and ord(s[0]) == 12:
+            if len(s) == 769 and c2i(s[0]) == 12:
                 # check if the palette is linear greyscale
                 for i in range(256):
                     if s[i*3+1:i*3+4] != chr(i)*3:
@@ -91,7 +101,7 @@ class PcxImageFile(ImageFile.ImageFile):
             rawmode = "RGB;L"
 
         else:
-            raise IOError, "unknown PCX mode"
+            raise IOError("unknown PCX mode")
 
         self.mode = mode
         self.size = bbox[2]-bbox[0], bbox[3]-bbox[1]
@@ -119,7 +129,7 @@ def _save(im, fp, filename, check=0):
     try:
         version, bits, planes, rawmode = SAVE[im.mode]
     except KeyError:
-        raise ValueError, "Cannot save %s images as PCX" % im.mode
+        raise ValueError("Cannot save %s images as PCX" % im.mode)
 
     if check:
         return check

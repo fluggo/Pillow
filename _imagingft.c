@@ -19,6 +19,15 @@
  */
 
 #include "Python.h"
+#if PY_MAJOR_VERSION >= 3
+#define IS_PY3K
+#ifndef DL_EXPORT
+#   define DL_EXPORT(RTYPE) RTYPE
+#endif
+#ifndef PyInt_FromLong
+#   define PyInt_FromLong(v) PyLong_FromLong(v)
+#endif
+#endif
 #include "Imaging.h"
 
 #if !defined(USE_FREETYPE_2_0)
@@ -82,7 +91,7 @@ typedef struct {
     FT_Face face;
 } FontObject;
 
-staticforward PyTypeObject Font_Type;
+extern PyTypeObject Font_Type;
 
 /* round a 26.6 pixel coordinate to the nearest larger integer */
 #define PIXEL(x) ((((x)+63) & -64)>>6)
@@ -423,24 +432,25 @@ static PyMethodDef font_methods[] = {
 static PyObject*  
 font_getattr(FontObject* self, char* name)
 {
+#ifndef IS_PY3K
     PyObject* res;
 
     res = Py_FindMethod(font_methods, (PyObject*) self, name);
 
     if (res)
         return res;
-
+#endif
     PyErr_Clear();
 
     /* attributes */
     if (!strcmp(name, "family")) {
         if (self->face->family_name)
-            return PyString_FromString(self->face->family_name);
+            return PyBytes_FromString(self->face->family_name);
         Py_RETURN_NONE;
     }
     if (!strcmp(name, "style")) {
         if (self->face->style_name)
-            return PyString_FromString(self->face->style_name);
+            return PyBytes_FromString(self->face->style_name);
         Py_RETURN_NONE;
     }
     if (!strcmp(name, "ascent"))
@@ -456,9 +466,9 @@ font_getattr(FontObject* self, char* name)
     return NULL;
 }
 
-statichere PyTypeObject Font_Type = {
-    PyObject_HEAD_INIT(NULL)
-    0, "Font", sizeof(FontObject), 0,
+PyTypeObject Font_Type = {
+    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+    "Font", sizeof(FontObject), 0,
     /* methods */
     (destructor)font_dealloc, /* tp_dealloc */
     0, /* tp_print */
@@ -470,6 +480,73 @@ static PyMethodDef _functions[] = {
     {NULL, NULL}
 };
 
+/*----------------------------------------------------------------------------*/
+struct module_state {
+    PyObject *error;
+};
+
+#ifdef IS_PY3K
+#define GETSTATE(m) ((struct module_state*)PyModule_GetState(m))
+
+static int traverse(PyObject *m, visitproc visit, void *arg) {
+    Py_VISIT(GETSTATE(m)->error);
+    return 0;
+}
+
+static int clear(PyObject *m) {
+    Py_CLEAR(GETSTATE(m)->error);
+    return 0;
+}
+
+static struct PyModuleDef moduledef = {
+        PyModuleDef_HEAD_INIT,
+        "_imagingft",
+        NULL,
+        sizeof(struct module_state),
+        _functions,
+        NULL,
+        traverse,
+        clear,
+        NULL
+};
+
+PyObject *
+PyInit__imagingft(void)
+{
+    PyObject *m;
+    PyObject *d;
+    PyObject *v;
+    int major, minor, patch;
+
+    m = PyModule_Create(&moduledef);
+    d = PyModule_GetDict(m);
+    if (m == NULL)
+        return NULL;
+    struct module_state *st = GETSTATE(m);
+
+    st->error = PyErr_NewException("_imagingft.Error", NULL, NULL);
+    if (st->error == NULL) {
+        Py_DECREF(m);
+        return NULL;
+    }
+
+    if (FT_Init_FreeType(&library)) {
+        Py_DECREF(m);
+        return NULL;
+    }
+
+    FT_Library_Version(library, &major, &minor, &patch);
+
+    v = PyBytes_FromFormat("%d.%d.%d", major, minor, patch);
+
+    PyDict_SetItemString(d, "freetype2_version", v);
+
+    return m;
+}
+#else
+#define GETSTATE(m) (&_state)
+static struct module_state _state;
+
 DL_EXPORT(void)
 init_imagingft(void)
 {
@@ -477,9 +554,6 @@ init_imagingft(void)
     PyObject* d;
     PyObject* v;
     int major, minor, patch;
-
-    /* Patch object type */
-    Font_Type.ob_type = &PyType_Type;
 
     m = Py_InitModule("_imagingft", _functions);
     d = PyModule_GetDict(m);
@@ -489,14 +563,7 @@ init_imagingft(void)
 
     FT_Library_Version(library, &major, &minor, &patch);
 
-#if PY_VERSION_HEX >= 0x02020000
-    v = PyString_FromFormat("%d.%d.%d", major, minor, patch);
-#else
-    {
-        char buffer[100];
-        sprintf(buffer, "%d.%d.%d", major, minor, patch);
-        v = PyString_FromString(buffer);
-    }
-#endif
+    v = PyBytes_FromFormat("%d.%d.%d", major, minor, patch);
     PyDict_SetItemString(d, "freetype2_version", v);
 }
+#endif

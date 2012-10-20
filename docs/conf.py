@@ -40,8 +40,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Pillow'
-copyright = u'2012, Alex Clark (PIL fork author)'
+project = 'Pillow'
+copyright = '2012, Alex Clark (PIL fork author)'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -183,8 +183,8 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'Pillowdocumentation.tex', u'Pillow documentation Documentation',
-   u'Alex Clark (PIL fork author)', 'manual'),
+  ('index', 'Pillowdocumentation.tex', 'Pillow documentation Documentation',
+   'Alex Clark (PIL fork author)', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -213,8 +213,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'pillowdocumentation', u'Pillow documentation Documentation',
-     [u'Alex Clark (PIL fork author)'], 1)
+    ('index', 'pillowdocumentation', 'Pillow documentation Documentation',
+     ['Alex Clark (PIL fork author)'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -227,8 +227,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'Pillowdocumentation', u'Pillow documentation Documentation',
-   u'Alex Clark (PIL fork author)', 'Pillowdocumentation', 'One line description of project.',
+  ('index', 'Pillowdocumentation', 'Pillow documentation Documentation',
+   'Alex Clark (PIL fork author)', 'Pillowdocumentation', 'One line description of project.',
    'Miscellaneous'),
 ]
 

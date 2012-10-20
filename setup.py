@@ -158,8 +158,8 @@ class pil_build_ext(build_ext):
                 TCL_ROOT = os.path.abspath(TCL_ROOT)
                 if os.path.isfile(os.path.join(TCL_ROOT, "include", "tk.h")):
                     # FIXME: use distutils logging (?)
-                    print("--- using Tcl/Tk libraries at", TCL_ROOT)
-                    print("--- using Tcl/Tk version", TCL_VERSION)
+                    print(("--- using Tcl/Tk libraries at", TCL_ROOT))
+                    print(("--- using Tcl/Tk version", TCL_VERSION))
                     TCL_ROOT = _lib_include(TCL_ROOT)
                     break
             else:
@@ -316,7 +316,7 @@ class pil_build_ext(build_ext):
             for root in framework_roots:
                 if (os.path.exists(os.path.join(root, "Tcl.framework")) and
                     os.path.exists(os.path.join(root, "Tk.framework"))):
-                    print("--- using frameworks at", root)
+                    print(("--- using frameworks at", root))
                     frameworks = ["-framework", "Tcl", "-framework", "Tk"]
                     dir = os.path.join(root, "Tcl.framework", "Headers")
                     _add_directory(self.compiler.include_dirs, dir, 0)
@@ -352,15 +352,15 @@ class pil_build_ext(build_ext):
 
     def summary_report(self, feature, unsafe_zlib):
 
-        print("-" * 68)
-        print("SETUP SUMMARY (Pillow", VERSION, "/ PIL %s)" % PIL_VERSION)
-        print("-" * 68)
-        print("version      ", VERSION)
+        print(("-" * 68))
+        print(("SETUP SUMMARY (Pillow", VERSION, "/ PIL %s)" % PIL_VERSION))
+        print(("-" * 68))
+        print(("version      ", VERSION))
         v = sys.version.split("[")
-        print("platform     ", sys.platform, v[0].strip())
+        print(("platform     ", sys.platform, v[0].strip()))
         for v in v[1:]:
-            print("             ", ("[" + v).strip())
-        print("-" * 68)
+            print(("             ", ("[" + v).strip()))
+        print(("-" * 68))
 
         options = [
             (feature.tcl and feature.tk, "TKINTER"),
@@ -374,18 +374,18 @@ class pil_build_ext(build_ext):
         all = 1
         for option in options:
             if option[0]:
-                print("---", option[1], "support available")
+                print(("---", option[1], "support available"))
             else:
-                print("***", option[1], "support not available")
+                print(("***", option[1], "support not available"))
                 if option[1] == "TKINTER" and _tkinter:
                     version = _tkinter.TCL_VERSION
-                    print("(Tcl/Tk %s libraries needed)" % version)
+                    print(("(Tcl/Tk %s libraries needed)" % version))
                 print()
                 all = 0
 
         if feature.zlib and unsafe_zlib:
             print()
-            print("*** Warning: zlib", unsafe_zlib)
+            print(("*** Warning: zlib", unsafe_zlib))
             print("may contain a security vulnerability.")
             print("*** Consider upgrading to zlib 1.2.3 or newer.")
             print("*** See: http://www.kb.cert.org/vuls/id/238678")
@@ -393,7 +393,7 @@ class pil_build_ext(build_ext):
             print(" http://www.gzip.org/zlib/advisory-2002-03-11.txt")
             print()
 
-        print("-" * 68)
+        print(("-" * 68))
 
         if not all:
             print("To add a missing option, make sure you have the required")

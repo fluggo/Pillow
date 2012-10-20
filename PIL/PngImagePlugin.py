@@ -33,20 +33,35 @@
 
 __version__ = "0.9"
 
+import sys
 import re, string
+import zlib
 
-import Image, ImageFile, ImagePalette, zlib
+from PIL import Image, ImageFile, ImagePalette
 
+def c2i(c):
+    if sys.version_info[0] < 3:
+        return ord(c)
+    else:
+        return c
 
 def i16(c):
-    return ord(c[1]) + (ord(c[0])<<8)
+    if sys.version_info[0] < 3:
+        return ord(c[1]) + (ord(c[0])<<8)
+    else:
+        return c[1] + (c[0]<<8)
+
 def i32(c):
-    return ord(c[3]) + (ord(c[2])<<8) + (ord(c[1])<<16) + (ord(c[0])<<24)
+    if sys.version_info[0] < 3:
+        return ord(c[3]) + (ord(c[2])<<8) + (ord(c[1])<<16) + (ord(c[0])<<24)
+    else:
+        return c[3] + (c[2]<<8) + (c[1]<<16) + (c[0]<<24)
 
-is_cid = re.compile("\w\w\w\w").match
+
+is_cid = re.compile(b"\w\w\w\w").match
 
 
-_MAGIC = "\211PNG\r\n\032\n"
+_MAGIC = b"\211PNG\r\n\032\n"
 
 
 _MODES = {
@@ -96,7 +111,7 @@ class ChunkStream:
             len = i32(s)
 
         if not is_cid(cid):
-            raise SyntaxError, "broken PNG file (chunk %s)" % repr(cid)
+            raise SyntaxError("broken PNG file (chunk %s)" % repr(cid))
 
         return cid, pos, len
 
@@ -109,9 +124,8 @@ class ChunkStream:
 
     def call(self, cid, pos, len):
         "Call the appropriate chunk handler"
-
         if Image.DEBUG:
-            print "STREAM", cid, pos, len
+            print("STREAM", cid, pos, len)
         return getattr(self, "chunk_" + cid)(pos, len)
 
     def crc(self, cid, data):
@@ -120,8 +134,8 @@ class ChunkStream:
         crc1 = Image.core.crc32(data, Image.core.crc32(cid))
         crc2 = i16(self.fp.read(2)), i16(self.fp.read(2))
         if crc1 != crc2:
-            raise SyntaxError, "broken PNG file"\
-                "(bad header checksum in %s)" % cid
+            raise SyntaxError("broken PNG file"\
+                "(bad header checksum in %s)" % cid)
 
     def crc_skip(self, cid, data):
         "Read checksum.  Used if the C module is not present"
@@ -158,7 +172,6 @@ class PngInfo:
 
     def add_text(self, key, value, zip=0):
         if zip:
-            import zlib
             self.add("zTXt", key + "\0\0" + zlib.compress(value))
         else:
             self.add("tEXt", key + "\0" + value)
@@ -191,9 +204,9 @@ class PngStream(ChunkStream):
         # Compressed profile    n bytes (zlib with deflate compression)
         i = string.find(s, chr(0))
         if Image.DEBUG:
-            print "iCCP profile name", s[:i]
-            print "Compression method", ord(s[i])
-        comp_method = ord(s[i])
+            print("iCCP profile name", s[:i])
+            print("Compression method", c2i(s[i]))
+        comp_method = c2i(s[i])
         if comp_method != 0:
             raise SyntaxError("Unknown compression method %s in iCCP chunk" % comp_method)
         try:
@@ -209,13 +222,13 @@ class PngStream(ChunkStream):
         s = ImageFile._safe_read(self.fp, len)
         self.im_size = i32(s), i32(s[4:])
         try:
-            self.im_mode, self.im_rawmode = _MODES[(ord(s[8]), ord(s[9]))]
+            self.im_mode, self.im_rawmode = _MODES[(c2i(s[8]), c2i(s[9]))]
         except:
             pass
-        if ord(s[12]):
+        if c2i(s[12]):
             self.im_info["interlace"] = 1
-        if ord(s[11]):
-            raise SyntaxError, "unknown filter category"
+        if c2i(s[11]):
+            raise SyntaxError("unknown filter category")
         return s
 
     def chunk_IDAT(self, pos, len):
@@ -264,7 +277,7 @@ class PngStream(ChunkStream):
         # pixels per unit
         s = ImageFile._safe_read(self.fp, len)
         px, py = i32(s), i32(s[4:])
-        unit = ord(s[8])
+        unit = c2i(s[8])
         if unit == 1: # meter
             dpi = int(px * 0.0254 + 0.5), int(py * 0.0254 + 0.5)
             self.im_info["dpi"] = dpi
@@ -289,7 +302,7 @@ class PngStream(ChunkStream):
         # compressed text
         s = ImageFile._safe_read(self.fp, len)
         k, v = string.split(s, "\0", 1)
-        comp_method = ord(v[0])
+        comp_method = c2i(v[0])
         if comp_method != 0:
             raise SyntaxError("Unknown compression method %s in zTXt chunk" % comp_method)
         import zlib
@@ -313,7 +326,7 @@ class PngImageFile(ImageFile.ImageFile):
     def _open(self):
 
         if self.fp.read(8) != _MAGIC:
-            raise SyntaxError, "not a PNG file"
+            raise SyntaxError("not a PNG file")
 
         #
         # Parse headers up to the first IDAT chunk
@@ -326,14 +339,15 @@ class PngImageFile(ImageFile.ImageFile):
             # get next chunk
 
             cid, pos, len = self.png.read()
-
+            if not isinstance(cid, str):
+                cid = cid.decode('utf-8')
             try:
                 s = self.png.call(cid, pos, len)
             except EOFError:
                 break
             except AttributeError:
                 if Image.DEBUG:
-                    print cid, pos, len, "(unknown)"
+                    print(cid, pos, len, "(unknown)")
                 s = ImageFile._safe_read(self.fp, len)
 
             self.png.crc(cid, s)
@@ -469,7 +483,7 @@ def _save(im, fp, filename, chunk=putchunk, check=0):
         #
         # attempt to minimize storage requirements for palette images
 
-        if im.encoderinfo.has_key("bits"):
+        if "bits" in im.encoderinfo:
 
             # number of bits specified by user
             n = 1 << im.encoderinfo["bits"]
@@ -492,18 +506,18 @@ def _save(im, fp, filename, chunk=putchunk, check=0):
             mode = "%s;%d" % (mode, bits)
 
     # encoder options
-    if im.encoderinfo.has_key("dictionary"):
+    if "dictionary" in im.encoderinfo:
         dictionary = im.encoderinfo["dictionary"]
     else:
         dictionary = ""
 
-    im.encoderconfig = (im.encoderinfo.has_key("optimize"), dictionary)
+    im.encoderconfig = ("optimize" in im.encoderinfo, dictionary)
 
     # get the corresponding PNG mode
     try:
         rawmode, mode = _OUTMODES[mode]
     except KeyError:
-        raise IOError, "cannot write mode %s as PNG" % mode
+        raise IOError("cannot write mode %s as PNG" % mode)
 
     if check:
         return check
@@ -523,7 +537,7 @@ def _save(im, fp, filename, chunk=putchunk, check=0):
     if im.mode == "P":
         chunk(fp, "PLTE", im.im.getpalette("RGB"))
 
-    if im.encoderinfo.has_key("transparency"):
+    if "transparency" in im.encoderinfo:
         if im.mode == "P":
             transparency = max(0, min(255, im.encoderinfo["transparency"]))
             chunk(fp, "tRNS", chr(255) * transparency + chr(0))
@@ -553,7 +567,7 @@ def _save(im, fp, filename, chunk=putchunk, check=0):
             chunk(fp, cid, data)
 
     # ICC profile writing support -- 2008-06-06 Florian Hoech
-    if im.info.has_key("icc_profile"):
+    if "icc_profile" in im.info:
         # ICC profile
         # according to PNG spec, the iCCP chunk contains:
         # Profile name  1-79 bytes (character string)

@@ -21,7 +21,7 @@
 #    http://www.flipcode.com/tutorials/tut_q2levels.shtml
 # and has been tested with a few sample files found using google.
 
-import Image
+from PIL import Image
 
 def i32(c, o=0):
     return ord(c[o])+(ord(c[o+1])<<8)+(ord(c[o+2])<<16)+(ord(c[o+3])<<24)
@@ -42,8 +42,11 @@ def open(filename):
     if hasattr(filename, "read"):
         fp = filename
     else:
-        import __builtin__
-        fp = __builtin__.open(filename, "rb")
+        try:
+            import builtins
+        except ImportError:
+            import __builtin__ as builtins
+        fp = builtins.open(filename, "rb")
 
     # read header fields
     header = fp.read(32+24+32+12)
@@ -122,5 +125,5 @@ quake2palette = (
 
 if __name__ == "__main__":
     im = open("../hacks/sample.wal")
-    print im.info, im.mode, im.size
+    print(im.info, im.mode, im.size)
     im.save("../out.png")

@@ -19,21 +19,33 @@
 
 __version__ = "0.1"
 
-import Image, BmpImagePlugin
+import sys
+from PIL import Image, BmpImagePlugin
 
 
 #
 # --------------------------------------------------------------------
 
+def c2i(c):
+    if sys.version_info[0] < 3:
+        return ord(c)
+    else:
+        return c
+
 def i16(c):
-    return ord(c[0]) + (ord(c[1])<<8)
+    if sys.version_info[0] == 3:
+        return c[0] + (c[1]<<8)
+    else:
+        return ord(c[0]) + (ord(c[1])<<8)
 
 def i32(c):
-    return ord(c[0]) + (ord(c[1])<<8) + (ord(c[2])<<16) + (ord(c[3])<<24)
-
+    if sys.version_info[0] == 3:
+        return c[0] + (c[1]<<8) + (c[2]<<16) + (c[3]<<24)
+    else:
+        return ord(c[0]) + (ord(c[1])<<8) + (ord(c[2])<<16) + (ord(c[3])<<24)
 
 def _accept(prefix):
-    return prefix[:4] == "\0\0\1\0"
+    return prefix[:4] == b"\0\0\1\0"
 
 ##
 # Image plugin for Windows Icon files.
@@ -48,7 +60,7 @@ class IcoImageFile(BmpImagePlugin.BmpImageFile):
         # check magic
         s = self.fp.read(6)
         if not _accept(s):
-            raise SyntaxError, "not an ICO file"
+            raise SyntaxError("not an ICO file")
 
         # pick the largest icon in the file
         m = ""
@@ -56,12 +68,12 @@ class IcoImageFile(BmpImagePlugin.BmpImageFile):
             s = self.fp.read(16)
             if not m:
                 m = s
-            elif ord(s[0]) > ord(m[0]) and ord(s[1]) > ord(m[1]):
+            elif c2i(s[0]) > c2i(m[0]) and c2i(s[1]) > c2i(m[1]):
                 m = s
-            #print "width", ord(s[0])
-            #print "height", ord(s[1])
-            #print "colors", ord(s[2])
-            #print "reserved", ord(s[3])
+            #print "width", c2i(s[0])
+            #print "height", c2i(s[1])
+            #print "colors", c2i(s[2])
+            #print "reserved", c2i(s[3])
             #print "planes", i16(s[4:])
             #print "bitcount", i16(s[6:])
             #print "bytes", i32(s[8:])

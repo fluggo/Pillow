@@ -25,7 +25,7 @@
 
 __version__ = "0.1"
 
-import ImageFile, ImagePalette
+from PIL import ImageFile, ImagePalette
 
 def i16(c):
     return ord(c[1]) + (ord(c[0])<<8)
@@ -73,9 +73,12 @@ def open(fp, mode = "r"):
         raise ValueError("bad mode")
 
     if type(fp) == type(""):
-        import __builtin__
+        try:
+            import builtins
+        except ImportError:
+            import __builtin__ as builtins
         filename = fp
-        fp = __builtin__.open(fp, "rb")
+        fp = builtins.open(fp, "rb")
     else:
         filename = ""
 

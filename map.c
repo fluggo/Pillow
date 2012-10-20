@@ -20,6 +20,10 @@
 
 #include "Python.h"
 
+#if PY_MAJOR_VERSION >= 3
+#define IS_PY3K
+#endif
+
 #if PY_VERSION_HEX < 0x01060000
 #define PyObject_New PyObject_NEW
 #define PyObject_Del PyMem_DEL
@@ -57,14 +61,12 @@ typedef struct {
 #endif
 } ImagingMapperObject;
 
-staticforward PyTypeObject ImagingMapperType;
+extern PyTypeObject ImagingMapperType;
 
 ImagingMapperObject*
 PyImaging_MapperNew(const char* filename, int readonly)
 {
     ImagingMapperObject *mapper;
-
-    ImagingMapperType.ob_type = &PyType_Type;
 
     mapper = PyObject_New(ImagingMapperObject, &ImagingMapperType);
     if (mapper == NULL)
@@ -147,12 +149,12 @@ mapping_read(ImagingMapperObject* mapper, PyObject* args)
     if (size < 0)
         size = 0;
 
-    buf = PyString_FromStringAndSize(NULL, size);
+    buf = PyBytes_FromStringAndSize(NULL, size);
     if (!buf)
 	return NULL;
 
     if (size > 0) {
-        memcpy(PyString_AsString(buf), mapper->base + mapper->offset, size);
+        memcpy(PyBytes_AsString(buf), mapper->base + mapper->offset, size);
         mapper->offset += size;
     }
 
@@ -260,22 +262,27 @@ static struct PyMethodDef methods[] = {
     {NULL, NULL} /* sentinel */
 };
 
+#ifndef IS_PY3K
 static PyObject*  
 mapping_getattr(ImagingMapperObject* self, char* name)
 {
     return Py_FindMethod(methods, (PyObject*) self, name);
 }
+#endif
 
-statichere PyTypeObject ImagingMapperType = {
-	PyObject_HEAD_INIT(NULL)
-	0,				/*ob_size*/
+PyTypeObject ImagingMapperType = {
+    PyVarObject_HEAD_INIT(&PyType_Type, 0)
 	"ImagingMapper",		/*tp_name*/
 	sizeof(ImagingMapperObject),	/*tp_size*/
 	0,				/*tp_itemsize*/
 	/* methods */
 	(destructor)mapping_dealloc,	/*tp_dealloc*/
 	0,				/*tp_print*/
+#ifndef IS_PY3K
 	(getattrfunc)mapping_getattr,	/*tp_getattr*/
+#else
+    0,                              /*tp_getattr*/
+#endif
 	0,				/*tp_setattr*/
 	0,				/*tp_compare*/
 	0,				/*tp_repr*/

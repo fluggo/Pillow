@@ -12,7 +12,7 @@
 # See the README file for information on usage and redistribution.
 #
 
-from StringIO import StringIO
+from io import StringIO
 
 ##
 # The <b>ImageFileIO</b> module can be used to read an image from a

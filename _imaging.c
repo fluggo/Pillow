@@ -73,6 +73,24 @@
 
 
 #include "Python.h"
+#if PY_MAJOR_VERSION >= 3
+#define IS_PY3K
+#ifndef DL_EXPORT
+#   define DL_EXPORT(RTYPE) RTYPE
+#endif
+#ifndef PyInt_AS_LONG
+#   define PyInt_AS_LONG(op) PyLong_AS_LONG(op)
+#endif
+#ifndef PyInt_AsLong
+#   define PyInt_AsLong(op) PyLong_AsLong(op)
+#endif
+#ifndef PyInt_Check
+#   define PyInt_Check(op) PyLong_Check(op)
+#endif
+#ifndef PyInt_FromLong
+#   define PyInt_FromLong(v) PyLong_FromLong(v)
+#endif
+#endif
 
 #include "Imaging.h"
 
@@ -126,7 +144,7 @@ typedef struct {
     ImagingAccess access;
 } ImagingObject;
 
-staticforward PyTypeObject Imaging_Type;
+extern PyTypeObject Imaging_Type;
 
 #ifdef WITH_IMAGEDRAW
 
@@ -148,7 +166,7 @@ typedef struct {
     Glyph glyphs[256];
 } ImagingFontObject;
 
-staticforward PyTypeObject ImagingFont_Type;
+extern PyTypeObject ImagingFont_Type;
 
 typedef struct {
     PyObject_HEAD
@@ -157,7 +175,7 @@ typedef struct {
     int blend;
 } ImagingDrawObject;
 
-staticforward PyTypeObject ImagingDraw_Type;
+extern PyTypeObject ImagingDraw_Type;
 
 #endif
 
@@ -167,7 +185,7 @@ typedef struct {
     int readonly;
 } PixelAccessObject;
 
-staticforward PyTypeObject PixelAccess_Type;
+extern PyTypeObject PixelAccess_Type;
 
 PyObject* 
 PyImagingNew(Imaging imOut)
@@ -207,7 +225,7 @@ _dealloc(ImagingObject* imagep)
     PyObject_Del(imagep);
 }
 
-#define PyImaging_Check(op) ((op)->ob_type == &Imaging_Type)
+#define PyImaging_Check(op) (Py_TYPE(op) == &Imaging_Type)
 
 Imaging PyImaging_AsImaging(PyObject *op)
 {
@@ -528,7 +546,7 @@ getink(PyObject* color, Imaging im, char* ink)
         } else {
             a = 255;
             if (PyInt_Check(color)) {
-                r = PyInt_AS_LONG(color);
+                r = (int)PyInt_AS_LONG(color);
                 /* compatibility: ABGR */
                 a = (UINT8) (r >> 24);
                 b = (UINT8) (r >> 16);
@@ -900,11 +918,11 @@ _getpalette(ImagingObject* self, PyObject* args)
 	return NULL;
     }
 
-    palette = PyString_FromStringAndSize(NULL, palettesize * bits / 8);
+    palette = PyBytes_FromStringAndSize(NULL, palettesize * bits / 8);
     if (!palette)
 	return NULL;
 
-    pack((UINT8*) PyString_AsString(palette),
+    pack((UINT8*) PyBytes_AsString(palette),
 	 self->image->palette->palette, palettesize);
 
     return palette;
@@ -920,7 +938,7 @@ _getxy(PyObject* xy, int* x, int *y)
         
     value = PyTuple_GET_ITEM(xy, 0);
     if (PyInt_Check(value))
-        *x = PyInt_AS_LONG(value);
+        *x = (int)PyInt_AS_LONG(value);
     else if (PyFloat_Check(value))
         *x = (int) PyFloat_AS_DOUBLE(value);
     else
@@ -928,7 +946,7 @@ _getxy(PyObject* xy, int* x, int *y)
 
     value = PyTuple_GET_ITEM(xy, 1);
     if (PyInt_Check(value))
-        *y = PyInt_AS_LONG(value);
+        *y = (int)PyInt_AS_LONG(value);
     else if (PyFloat_Check(value))
         *y = (int) PyFloat_AS_DOUBLE(value);
     else
@@ -1225,9 +1243,9 @@ _putdata(ImagingObject* self, PyObject* args)
     }
 
     if (image->image8) {
-        if (PyString_Check(data)) {
+        if (PyBytes_Check(data)) {
             unsigned char* p;
-            p = (unsigned char*) PyString_AS_STRING((PyStringObject*) data);
+            p = (unsigned char*) PyBytes_AS_STRING((PyBytesObject*) data);
             if (scale == 1.0 && offset == 0.0)
                 /* Plain string data */
                 for (i = y = 0; i < n; i += image->xsize, y++) {
@@ -2218,11 +2236,13 @@ static struct PyMethodDef _font_methods[] = {
     {NULL, NULL} /* sentinel */
 };
 
+#ifndef IS_PY3K
 static PyObject*  
 _font_getattr(ImagingFontObject* self, char* name)
 {
     return Py_FindMethod(_font_methods, (PyObject*) self, name);
 }
+#endif
 
 /* -------------------------------------------------------------------- */
 
@@ -2656,13 +2676,16 @@ static struct PyMethodDef _draw_methods[] = {
     {NULL, NULL} /* sentinel */
 };
 
+#endif
+
+#ifndef IS_PY3K
 static PyObject*  
 _draw_getattr(ImagingDrawObject* self, char* name)
 {
     return Py_FindMethod(_draw_methods, (PyObject*) self, name);
 }
-
 #endif
+
 
 
 static PyObject*
@@ -2833,7 +2856,7 @@ _getcodecstatus(PyObject* self, PyObject* args)
 	return Py_None;
     }
 
-    return PyString_FromString(msg);
+    return PyBytes_FromString(msg);
 }
 
 /* -------------------------------------------------------------------- */
@@ -2963,6 +2986,38 @@ static struct PyMethodDef methods[] = {
 
 
 /* attributes */
+#ifdef IS_PY3K
+
+static PyObject*  
+_getattro(ImagingObject* self, PyObject* name)
+{
+    PyObject* res;
+
+    res = PyObject_GenericGetAttr((PyObject*) self, name);
+    if (res)
+	return res;
+
+    PyErr_Clear();
+    if (PyUnicode_CompareWithASCIIString(name, "mode") == 0) {
+        PyObject* b = PyBytes_FromString(self->image->mode);
+        char *mode = PyBytes_AsString(b);
+        res = PyUnicode_DecodeASCII(mode, strlen(mode), NULL);
+        Py_DECREF(b);
+        return res;
+    }
+    if (PyUnicode_CompareWithASCIIString(name, "size") == 0)
+        return Py_BuildValue("ii", self->image->xsize, self->image->ysize);
+    if (PyUnicode_CompareWithASCIIString(name, "bands") == 0)
+        return PyInt_FromLong(self->image->bands);
+    if (PyUnicode_CompareWithASCIIString(name, "id") == 0)
+	    return PyInt_FromLong((long) self->image);
+    if (PyUnicode_CompareWithASCIIString(name, "ptr") == 0)
+        return PyLong_FromVoidPtr(self->image);
+    PyErr_SetObject(PyExc_AttributeError, name);
+    return NULL;
+}
+
+#else
 
 static PyObject*  
 _getattr(ImagingObject* self, char* name)
@@ -2972,9 +3027,10 @@ _getattr(ImagingObject* self, char* name)
     res = Py_FindMethod(methods, (PyObject*) self, name);
     if (res)
 	return res;
+
     PyErr_Clear();
     if (strcmp(name, "mode") == 0)
-	return PyString_FromString(self->image->mode);
+	return PyBytes_FromString(self->image->mode);
     if (strcmp(name, "size") == 0)
 	return Py_BuildValue("ii", self->image->xsize, self->image->ysize);
     if (strcmp(name, "bands") == 0)
@@ -2982,10 +3038,12 @@ _getattr(ImagingObject* self, char* name)
     if (strcmp(name, "id") == 0)
 	return PyInt_FromLong((long) self->image);
     if (strcmp(name, "ptr") == 0)
-        return PyCObject_FromVoidPtrAndDesc(self->image, IMAGING_MAGIC, NULL);
+        return PyLong_FromVoidPtr(self->image);
     PyErr_SetString(PyExc_AttributeError, name);
     return NULL;
 }
+
+#endif
 
 
 /* basic sequence semantics */
@@ -3026,49 +3084,98 @@ static PySequenceMethods image_as_sequence = {
 
 /* type description */
 
-statichere PyTypeObject Imaging_Type = {
-    PyObject_HEAD_INIT(NULL)
-    0,				/*ob_size*/
-    "ImagingCore",		/*tp_name*/
-    sizeof(ImagingObject),	/*tp_size*/
-    0,				/*tp_itemsize*/
+PyTypeObject Imaging_Type = {
+    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+    "ImagingCore",		        /*tp_name*/
+    sizeof(ImagingObject),	    /*tp_size*/
+    0,				            /*tp_itemsize*/
     /* methods */
-    (destructor)_dealloc,	/*tp_dealloc*/
-    0,				/*tp_print*/
-    (getattrfunc)_getattr,	/*tp_getattr*/
-    0,				/*tp_setattr*/
-    0,				/*tp_compare*/
-    0,				/*tp_repr*/
+    (destructor)_dealloc,	    /*tp_dealloc*/
+    0,				            /*tp_print*/
+#ifndef IS_PY3K
+    (getattrfunc)_getattr,	    /*tp_getattr*/
+#else
+    0,                          /*tp_getattr*/
+#endif
+    0,				            /*tp_setattr*/
+    0,				            /*tp_compare*/
+    0,				            /*tp_repr*/
     0,                          /*tp_as_number */
     &image_as_sequence,         /*tp_as_sequence */
     0,                          /*tp_as_mapping */
-    0                           /*tp_hash*/
+    0,                           /*tp_hash*/
+    0,                           /* tp_call */
+    0,                           /* tp_str */
+#ifdef IS_PY3K
+    _getattro,                  /* tp_getattro */
+#else
+    0,                          /* tp_getattro */
+#endif
+    0,                          /* tp_setattro */
+    0,                          /* tp_as_buffer */
+    Py_TPFLAGS_DEFAULT,         /* tp_flags */
+    0,                          /* tp_doc */
+    0,                          /* tp_traverse */
+    0,                          /* tp_clear */
+    0,                          /* tp_richcompare */
+    0,                          /* tp_weaklistoffset */
+    0,                          /* tp_iter */
+    0,                          /* tp_iternext */
+    methods,                    /* tp_methods */
 };
+
 
 #ifdef WITH_IMAGEDRAW
 
-statichere PyTypeObject ImagingFont_Type = {
-    PyObject_HEAD_INIT(NULL)
-    0,				/*ob_size*/
+PyTypeObject ImagingFont_Type = {
+    PyVarObject_HEAD_INIT(&PyType_Type, 0)
     "ImagingFont",		/*tp_name*/
     sizeof(ImagingFontObject),	/*tp_size*/
     0,				/*tp_itemsize*/
     /* methods */
     (destructor)_font_dealloc,	/*tp_dealloc*/
     0,				/*tp_print*/
+#ifndef IS_PY3K
     (getattrfunc)_font_getattr,	/*tp_getattr*/
+#else
+    0,	                        /*tp_getattr*/
+#endif
 };
 
-statichere PyTypeObject ImagingDraw_Type = {
-    PyObject_HEAD_INIT(NULL)
-    0,				/*ob_size*/
+PyTypeObject ImagingDraw_Type = {
+    PyVarObject_HEAD_INIT(&PyType_Type, 0)
     "ImagingDraw",		/*tp_name*/
     sizeof(ImagingDrawObject),	/*tp_size*/
     0,				/*tp_itemsize*/
     /* methods */
     (destructor)_draw_dealloc,	/*tp_dealloc*/
     0,				/*tp_print*/
+#ifndef IS_PY3K
     (getattrfunc)_draw_getattr,	/*tp_getattr*/
+#else
+    0,                          /* tp_getattr*/
+    0,                          /* tp_setattr */
+    0,                          /* tp_compare */
+    0,                          /* tp_repr */
+    0,                          /* tp_as_number */
+    0,                          /* tp_as_sequence */
+    0,                          /* tp_as_mapping */
+    0,                          /* tp_hash */
+    0,                          /* tp_call */
+    0,                          /* tp_str */
+    PyObject_GenericGetAttr,    /* tp_getattro */
+    0,                          /* tp_setattro */
+    0,                          /* tp_as_buffer */
+    0,                          /* tp_flags */
+    0,                          /* tp_doc */
+    0,                          /* tp_traverse */
+    0,                          /* tp_clear */
+    0,                          /* tp_richcompare */
+    0,                          /* tp_weaklistoffset */
+    0,                          /* tp_iter */
+    0,                          /* tp_iternext */
+    _draw_methods,              /* tp_methods */
+#endif
 };
 
 #endif
@@ -3081,9 +3188,9 @@ static PyMappingMethods pixel_access_as_mapping = {
 
 /* type description */
 
-statichere PyTypeObject PixelAccess_Type = {
-    PyObject_HEAD_INIT(NULL)
-    0, "PixelAccess", sizeof(PixelAccessObject), 0,
+PyTypeObject PixelAccess_Type = {
+    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+    "PixelAccess", sizeof(PixelAccessObject), 0,
     /* methods */
     (destructor)pixel_access_dealloc, /*tp_dealloc*/
     0, /*tp_print*/
@@ -3246,36 +3353,93 @@ static PyMethodDef functions[] = {
     {NULL, NULL} /* sentinel */
 };
 
-DL_EXPORT(void)
-init_imaging(void)
+/*----------------------------------------------------------------------------*/
+struct module_state {
+    PyObject *error;
+};
+
+static void _set_version(PyObject *d)
 {
-    PyObject* m;
-    PyObject* d;
-
-    /* Patch object type */
-    Imaging_Type.ob_type = &PyType_Type;
-#ifdef WITH_IMAGEDRAW
-    ImagingFont_Type.ob_type = &PyType_Type;
-    ImagingDraw_Type.ob_type = &PyType_Type;
-#endif
-    PixelAccess_Type.ob_type = &PyType_Type;
-
-    ImagingAccessInit();
-
-    m = Py_InitModule("_imaging", functions);
-    d = PyModule_GetDict(m);
-
 #ifdef HAVE_LIBJPEG
   {
     extern const char* ImagingJpegVersion(void);
-    PyDict_SetItemString(d, "jpeglib_version", PyString_FromString(ImagingJpegVersion()));
+    PyDict_SetItemString(d, "jpeglib_version", PyBytes_FromString(ImagingJpegVersion()));
   }
 #endif
 
 #ifdef HAVE_LIBZ
   {
     extern const char* ImagingZipVersion(void);
-    PyDict_SetItemString(d, "zlib_version", PyString_FromString(ImagingZipVersion()));
+    PyDict_SetItemString(d, "zlib_version", PyBytes_FromString(ImagingZipVersion()));
   }
 #endif
 }
+
+#ifdef IS_PY3K
+#define GETSTATE(m) ((struct module_state*)PyModule_GetState(m))
+
+static int traverse(PyObject *m, visitproc visit, void *arg) {
+    Py_VISIT(GETSTATE(m)->error);
+    return 0;
+}
+
+static int clear(PyObject *m) {
+    Py_CLEAR(GETSTATE(m)->error);
+    return 0;
+}
+
+static struct PyModuleDef moduledef = {
+        PyModuleDef_HEAD_INIT,
+        "_imaging",
+        NULL,
+        sizeof(struct module_state),
+        functions,
+        NULL,
+        traverse,
+        clear,
+        NULL
+};
+
+PyObject *
+PyInit__imaging(void)
+{
+    PyObject* m;
+    PyObject* d;
+
+    ImagingAccessInit();
+
+    m = PyModule_Create(&moduledef);
+    if (m == NULL)
+        return NULL;
+    struct module_state *st = GETSTATE(m);
+
+    st->error = PyErr_NewException("_imaging.Error", NULL, NULL);
+    if (st->error == NULL) {
+        Py_DECREF(m);
+        return NULL;
+    }
+
+    d = PyModule_GetDict(m);
+    _set_version(d);
+
+    return m;
+}
+#else
+#define GETSTATE(m) (&_state)
+static struct module_state _state;
+
+DL_EXPORT(void)
+init_imaging(void)
+{
+    PyObject* m;
+    PyObject* d;
+
+    ImagingAccessInit();
+
+    m = Py_InitModule("_imaging", functions);
+    d = PyModule_GetDict(m);
+
+    _set_version(d);
+
+}
+#endif

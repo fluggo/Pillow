@@ -17,7 +17,6 @@
 # See the README file for information on usage and redistribution.
 #
 
-import Image
 import re, string
 
 try:
@@ -43,7 +42,7 @@ def getrgb(color):
     except KeyError:
         try:
             # fall back on case-insensitive lookup
-            rgb = colormap[string.lower(color)]
+            rgb = colormap[color.lower()]
         except KeyError:
             rgb = None
     # found color in cache
@@ -97,6 +96,7 @@ def getrgb(color):
     raise ValueError("unknown color specifier: %r" % color)
 
 def getcolor(color, mode):
+    from PIL import Image
     # same as getrgb, but converts the result to the given mode
     color = getrgb(color)
     if mode == "RGB":

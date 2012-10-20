@@ -27,6 +27,18 @@
 
 
 #include "Python.h"
+#if PY_MAJOR_VERSION >= 3
+#define IS_PY3K
+#ifndef DL_EXPORT
+#   define DL_EXPORT(RTYPE) RTYPE
+#endif
+#ifndef PyInt_AS_LONG
+#   define PyInt_AS_LONG(op) PyLong_AS_LONG(op)
+#endif
+#ifndef PyInt_Check
+#   define PyInt_Check(op) PyLong_Check(op)
+#endif
+#endif
 
 #include <math.h>
 
@@ -59,7 +71,7 @@ typedef struct {
     int index; /* temporary use, e.g. in decimate */
 } PyPathObject;
 
-staticforward PyTypeObject PyPathType;
+extern PyTypeObject PyPathType;
 
 static double*
 alloc_array(int count)
@@ -110,7 +122,7 @@ path_dealloc(PyPathObject* path)
 /* Helpers								*/
 /* -------------------------------------------------------------------- */
 
-#define PyPath_Check(op) ((op)->ob_type == &PyPathType)
+#define PyPath_Check(op) (Py_TYPE(op) == &PyPathType)
 
 int
 PyPath_Flatten(PyObject* data, double **pxy)
@@ -542,11 +554,12 @@ static struct PyMethodDef methods[] = {
 static PyObject*  
 path_getattr(PyPathObject* self, char* name)
 {
+#ifndef IS_PY3K
     PyObject* res;
-
     res = Py_FindMethod(methods, (PyObject*) self, name);
     if (res)
 	return res;
+#endif
 
     PyErr_Clear();
 
@@ -567,9 +580,8 @@ static PySequenceMethods path_as_sequence = {
 	(ssizessizeobjargproc)0, /*sq_ass_slice*/
 };
 
-statichere PyTypeObject PyPathType = {
-	PyObject_HEAD_INIT(NULL)
-	0,				/*ob_size*/
+PyTypeObject PyPathType = {
+    PyVarObject_HEAD_INIT(&PyType_Type, 0)
 	"Path",				/*tp_name*/
 	sizeof(PyPathObject),		/*tp_size*/
 	0,				/*tp_itemsize*/

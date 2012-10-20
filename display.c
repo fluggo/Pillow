@@ -25,6 +25,10 @@
 
 #include "Python.h"
 
+#if PY_MAJOR_VERSION >= 3
+#define IS_PY3K
+#endif
+
 #if PY_VERSION_HEX < 0x01060000
 #define PyObject_New PyObject_NEW
 #define PyObject_Del PyMem_DEL
@@ -44,7 +48,7 @@ typedef struct {
     ImagingDIB dib;
 } ImagingDisplayObject;
 
-staticforward PyTypeObject ImagingDisplayType;
+extern PyTypeObject ImagingDisplayType;
 
 static ImagingDisplayObject*
 _new(const char* mode, int xsize, int ysize)
@@ -200,7 +204,7 @@ _tostring(ImagingDisplayObject* display, PyObject* args)
     if (!PyArg_ParseTuple(args, ":tostring"))
 	return NULL;
 
-    return PyString_FromStringAndSize(
+    return PyBytes_FromStringAndSize(
         display->dib->bits, display->dib->ysize * display->dib->linesize
         );
 }
@@ -220,11 +224,13 @@ static struct PyMethodDef methods[] = {
 static PyObject*  
 _getattr(ImagingDisplayObject* self, char* name)
 {
+#ifndef IS_PY3K
     PyObject* res;
 
     res = Py_FindMethod(methods, (PyObject*) self, name);
     if (res)
 	return res;
+#endif
     PyErr_Clear();
     if (!strcmp(name, "mode"))
 	return Py_BuildValue("s", self->dib->mode);
@@ -234,9 +240,8 @@ _getattr(ImagingDisplayObject* self, char* name)
     return NULL;
 }
 
-statichere PyTypeObject ImagingDisplayType = {
-	PyObject_HEAD_INIT(NULL)
-	0,				/*ob_size*/
+PyTypeObject ImagingDisplayType = {
+    PyVarObject_HEAD_INIT(&PyType_Type, 0)
 	"ImagingDisplay",		/*tp_name*/
 	sizeof(ImagingDisplayObject),	/*tp_size*/
 	0,				/*tp_itemsize*/
@@ -313,7 +318,7 @@ PyImaging_GrabScreenWin32(PyObject* self, PyObject* args)
 
     /* step 3: extract bits from bitmap */
 
-    buffer = PyString_FromStringAndSize(NULL, height * ((width*3 + 3) & -4));
+    buffer = PyBytes_FromStringAndSize(NULL, height * ((width*3 + 3) & -4));
     if (!buffer)
         return NULL;
 
@@ -353,11 +358,11 @@ static BOOL CALLBACK list_windows_callback(HWND hwnd, LPARAM lParam)
     /* get window title */
     title_size = GetWindowTextLength(hwnd);
     if (title_size > 0) {
-        title = PyString_FromStringAndSize(NULL, title_size);
+        title = PyBytes_FromStringAndSize(NULL, title_size);
         if (title)
             GetWindowText(hwnd, PyString_AS_STRING(title), title_size+1);
     } else
-        title = PyString_FromString("");
+        title = PyBytes_FromString("");
     if (!title)
         return 0;
 
@@ -512,7 +517,7 @@ PyImaging_GrabClipboardWin32(PyObject* self, PyObject* args)
         size = wcslen(data) * 2;
 #endif
 
-    result = PyString_FromStringAndSize(data, size);
+    result = PyBytes_FromStringAndSize(data, size);
 
     GlobalUnlock(handle);
 
@@ -820,7 +825,7 @@ PyImaging_DrawWmf(PyObject* self, PyObject* args)
 
     GdiFlush();
 
-    buffer = PyString_FromStringAndSize(ptr, height * ((width*3 + 3) & -4));
+    buffer = PyBytes_FromStringAndSize(ptr, height * ((width*3 + 3) & -4));
 
 error:
     DeleteEnhMetaFile(meta);

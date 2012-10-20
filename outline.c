@@ -19,6 +19,10 @@
 
 #include "Python.h"
 
+#if PY_MAJOR_VERSION >= 3
+#define IS_PY3K
+#endif
+
 #if PY_VERSION_HEX < 0x01060000
 #define PyObject_New PyObject_NEW
 #define PyObject_Del PyMem_DEL
@@ -35,7 +39,7 @@ typedef struct {
     ImagingOutline outline;
 } OutlineObject;
 
-staticforward PyTypeObject OutlineType;
+extern PyTypeObject OutlineType;
 
 #define PyOutline_Check(op) ((op)->ob_type == &OutlineType)
 
@@ -159,21 +163,26 @@ static struct PyMethodDef _outline_methods[] = {
     {NULL, NULL} /* sentinel */
 };
 
+#ifndef IS_PY3K
 static PyObject*  
 _outline_getattr(OutlineObject* self, char* name)
 {
     return Py_FindMethod(_outline_methods, (PyObject*) self, name);
 }
+#endif
 
-statichere PyTypeObject OutlineType = {
-	PyObject_HEAD_INIT(NULL)
-	0,				/*ob_size*/
+PyTypeObject OutlineType = {
+    PyVarObject_HEAD_INIT(&PyType_Type, 0)
 	"Outline",			/*tp_name*/
 	sizeof(OutlineObject),		/*tp_size*/
 	0,				/*tp_itemsize*/
 	/* methods */
 	(destructor)_outline_dealloc,	/*tp_dealloc*/
 	0,				/*tp_print*/
+#ifndef IS_PY3K
 	(getattrfunc)_outline_getattr,	/*tp_getattr*/
+#else
+    0,                              /*tp_getattr*/
+#endif
 	0				/*tp_setattr*/
 };

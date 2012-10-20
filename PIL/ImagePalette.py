@@ -17,7 +17,6 @@
 #
 
 import array
-import Image, ImageColor
 
 ##
 # Colour palette wrapper for palette mapped images.
@@ -28,11 +27,11 @@ class ImagePalette:
     def __init__(self, mode = "RGB", palette = None):
         self.mode = mode
         self.rawmode = None # if set, palette contains raw data
-        self.palette = palette or range(256)*len(self.mode)
+        self.palette = palette or list(range(256))*len(self.mode)
         self.colors = {}
         self.dirty = None
         if len(self.mode)*256 != len(self.palette):
-            raise ValueError, "wrong palette size"
+            raise ValueError("wrong palette size")
 
     def getdata(self):
         # experimental: get palette contents in format suitable
@@ -42,6 +41,7 @@ class ImagePalette:
         return self.mode + ";L", self.tostring()
 
     def tostring(self):
+        from PIL import Image
         # experimental: convert palette to string
         if self.rawmode:
             raise ValueError("palette contains raw palette data")
@@ -50,6 +50,7 @@ class ImagePalette:
         return array.array("B", self.palette).tostring()
 
     def getcolor(self, color):
+        from PIL import Image
         # experimental: given an rgb tuple, allocate palette entry
         if self.rawmode:
             raise ValueError("palette contains raw palette data")
@@ -59,7 +60,7 @@ class ImagePalette:
             except KeyError:
                 # allocate new color slot
                 if Image.isStringType(self.palette):
-                    self.palette = map(int, self.palette)
+                    self.palette = list(map(int, self.palette))
                 index = len(self.colors)
                 if index >= 256:
                     raise ValueError("cannot allocate more than 256 colors")
@@ -116,10 +117,11 @@ def _make_gamma_lut(exp, mode="RGB"):
     return lut
 
 def new(mode, data):
+    from PIL import Image
     return Image.core.new_palette(mode, data)
 
 def negative(mode="RGB"):
-    palette = range(256)
+    palette = list(range(256))
     palette.reverse()
     return ImagePalette(mode, palette * len(mode))
 
@@ -131,6 +133,7 @@ def random(mode="RGB"):
     return ImagePalette(mode, palette)
 
 def sepia(white="#fff0c0"):
+    from PIL import ImageColor
     r, g, b = ImageColor.getrgb(white)
     r = _make_linear_lut(0, r)
     g = _make_linear_lut(0, g)
@@ -138,7 +141,7 @@ def sepia(white="#fff0c0"):
     return ImagePalette("RGB", r + g + b)
 
 def wedge(mode="RGB"):
-    return ImagePalette(mode, range(256) * len(mode))
+    return ImagePalette(mode, list(range(256)) * len(mode))
 
 def load(filename):
 
@@ -150,7 +153,7 @@ def load(filename):
 
     if not lut:
         try:
-            import GimpPaletteFile
+            from PIL import GimpPaletteFile
             fp.seek(0)
             p = GimpPaletteFile.GimpPaletteFile(fp)
             lut = p.getpalette()
@@ -159,7 +162,7 @@ def load(filename):
 
     if not lut:
         try:
-            import GimpGradientFile
+            from PIL import GimpGradientFile
             fp.seek(0)
             p = GimpGradientFile.GimpGradientFile(fp)
             lut = p.getpalette()
@@ -168,7 +171,7 @@ def load(filename):
 
     if not lut:
         try:
-            import PaletteFile
+            from PIL import PaletteFile
             fp.seek(0)
             p = PaletteFile.PaletteFile(fp)
             lut = p.getpalette()
@@ -176,7 +179,7 @@ def load(filename):
             pass
 
     if not lut:
-        raise IOError, "cannot load palette"
+        raise IOError("cannot load palette")
 
     return lut # data, rawmode
 

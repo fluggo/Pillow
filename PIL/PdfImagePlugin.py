@@ -22,8 +22,8 @@
 
 __version__ = "0.4"
 
-import Image, ImageFile
-import StringIO
+from PIL import Image, ImageFile
+import io
 
 
 #
@@ -40,7 +40,7 @@ def _obj(fp, obj, **dict):
     fp.write("%d 0 obj\n" % obj)
     if dict:
         fp.write("<<\n")
-        for k, v in dict.items():
+        for k, v in list(dict.items()):
             if v is not None:
                 fp.write("/%s %s\n" % (k, v))
         fp.write(">>\n")
@@ -127,7 +127,7 @@ def _save(im, fp, filename):
     #
     # image
 
-    op = StringIO.StringIO()
+    op = io.StringIO()
 
     if filter == "/ASCIIHexDecode":
         if bits == 1:
@@ -178,7 +178,7 @@ def _save(im, fp, filename):
     #
     # page contents
 
-    op = StringIO.StringIO()
+    op = io.StringIO()
 
     op.write("q %d 0 0 %d 0 0 cm /image Do Q\n" % (int(width * 72.0 / resolution), int(height * 72.0 / resolution)))
 

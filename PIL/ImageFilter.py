@@ -1,3 +1,4 @@
+from functools import reduce
 #
 # The Python Imaging Library.
 # $Id$
@@ -52,7 +53,7 @@ class Kernel(Filter):
     def filter(self, image):
         if image.mode == "P":
             raise ValueError("cannot filter palette images")
-        return apply(image.filter, self.filterargs)
+        return image.filter(*self.filterargs)
 
 class BuiltinFilter(Kernel):
     def __init__(self):

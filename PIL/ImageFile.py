@@ -27,7 +27,7 @@
 # See the README file for information on usage and redistribution.
 #
 
-import Image
+from PIL import Image
 import traceback, string, os
 
 MAXBLOCK = 65536
@@ -54,10 +54,6 @@ def raise_ioerror(error):
 #
 # --------------------------------------------------------------------
 # Helpers
-
-def _tilesort(t1, t2):
-    # sort on offset
-    return cmp(t1[2], t2[2])
 
 #
 # --------------------------------------------------------------------
@@ -89,25 +85,25 @@ class ImageFile(Image.Image):
 
         try:
             self._open()
-        except IndexError, v: # end of data
+        except IndexError as v: # end of data
             if Image.DEBUG > 1:
                 traceback.print_exc()
-            raise SyntaxError, v
-        except TypeError, v: # end of data (ord)
+            raise SyntaxError(v)
+        except TypeError as v: # end of data (ord)
             if Image.DEBUG > 1:
                 traceback.print_exc()
-            raise SyntaxError, v
-        except KeyError, v: # unsupported mode
+            raise SyntaxError(v)
+        except KeyError as v: # unsupported mode
             if Image.DEBUG > 1:
                 traceback.print_exc()
-            raise SyntaxError, v
-        except EOFError, v: # got header but not the first frame
+            raise SyntaxError(v)
+        except EOFError as v: # got header but not the first frame
             if Image.DEBUG > 1:
                 traceback.print_exc()
-            raise SyntaxError, v
+            raise SyntaxError(v)
 
         if not self.mode or self.size[0] <= 0:
-            raise SyntaxError, "not identified by this driver"
+            raise SyntaxError("not identified by this driver")
 
     def draft(self, mode, size):
         "Set draft mode"
@@ -177,13 +173,13 @@ class ImageFile(Image.Image):
         if not self.map:
 
             # sort tiles in file order
-            self.tile.sort(_tilesort)
+            self.tile.sort(key = lambda x: x[2])
 
             try:
                 # FIXME: This is a hack to handle TIFF's JpegTables tag.
                 prefix = self.tile_prefix
             except AttributeError:
-                prefix = ""
+                prefix = b""
 
             for d, e, o, a in self.tile:
                 d = Image._getdecoder(self.mode, d, a, self.decoderconfig)
@@ -469,7 +465,7 @@ def _save(im, fp, tile):
     im.load()
     if not hasattr(im, "encoderconfig"):
         im.encoderconfig = ()
-    tile.sort(_tilesort)
+    tile.sort(key = lambda x: x[2])
     # FIXME: make MAXBLOCK a configuration parameter
     bufsize = max(MAXBLOCK, im.size[0] * 4) # see RawEncode.c
     try:

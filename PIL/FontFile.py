@@ -15,7 +15,7 @@
 #
 
 import os
-import Image
+from PIL import Image
 
 import marshal
 

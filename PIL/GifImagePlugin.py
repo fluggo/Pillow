@@ -23,29 +23,35 @@
 #
 # See the README file for information on usage and redistribution.
 #
-
+import sys
 
 __version__ = "0.9"
 
 
-import Image, ImageFile, ImagePalette
+from PIL import Image, ImageFile, ImagePalette
 
 
 # --------------------------------------------------------------------
 # Helpers
 
 def i16(c):
-    return ord(c[0]) + (ord(c[1])<<8)
+    if sys.version_info[0] < 3:
+        return ord(c[0]) + (ord(c[1])<<8)
+    else:
+        return c[0] + (c[1]<<8)
 
 def o16(i):
-    return chr(i&255) + chr(i>>8&255)
+    if sys.version_info[0] < 3:
+        return chr(i&255) + chr(i>>8&255)
+    else:
+        return bytes([i&255, i>>8&255])
 
 
 # --------------------------------------------------------------------
 # Identify/read GIF files
 
 def _accept(prefix):
-    return prefix[:6] in ["GIF87a", "GIF89a"]
+    return prefix[:6] in [b"GIF87a", b"GIF89a"]
 
 ##
 # Image plugin for GIF images.  This plugin supports both GIF87 and
@@ -59,17 +65,19 @@ class GifImageFile(ImageFile.ImageFile):
     global_palette = None
 
     def data(self):
-        s = self.fp.read(1)
-        if s and ord(s):
-            return self.fp.read(ord(s))
+        s = self.fp.read(1)[0]
+        if not isinstance(s, int):
+            s = ord(s)
+        if s:
+            return self.fp.read(s)
         return None
 
     def _open(self):
 
         # Screen
         s = self.fp.read(13)
-        if s[:6] not in ["GIF87a", "GIF89a"]:
-            raise SyntaxError, "not a GIF file"
+        if s[:6] not in [b"GIF87a", b"GIF89a"]:
+            raise SyntaxError("not a GIF file")
 
         self.info["version"] = s[:6]
 
@@ -77,17 +85,25 @@ class GifImageFile(ImageFile.ImageFile):
 
         self.tile = []
 
-        flags = ord(s[10])
+        flags = s[10]
+        if not isinstance(flags, int):
+            flags = ord(flags)
 
         bits = (flags & 7) + 1
 
         if flags & 128:
             # get global palette
-            self.info["background"] = ord(s[11])
+            i = s[11]
+            if not isinstance(i, int):
+                i = ord(i)
+            self.info["background"] = i
             # check if palette contains colour indices
             p = self.fp.read(3<<bits)
             for i in range(0, len(p), 3):
-                if not (chr(i/3) == p[i] == p[i+1] == p[i+2]):
+                c = i//3
+                if sys.version_info[0] < 3:
+                    c = chr(i/3)
+                if not (c == p[i] == p[i+1] == p[i+2]):
                     p = ImagePalette.raw("RGB", p)
                     self.global_palette = self.palette = p
                     break
@@ -106,7 +122,7 @@ class GifImageFile(ImageFile.ImageFile):
             self.__fp.seek(self.__rewind)
 
         if frame != self.__frame + 1:
-            raise ValueError, "cannot seek to frame %d" % frame
+            raise ValueError("cannot seek to frame %d" % frame)
         self.__frame = frame
 
         self.tile = []
@@ -128,22 +144,29 @@ class GifImageFile(ImageFile.ImageFile):
         while 1:
 
             s = self.fp.read(1)
-            if not s or s == ";":
+            if not s or s == b";":
                 break
 
-            elif s == "!":
+            elif s == b"!":
                 #
                 # extensions
                 #
-                s = self.fp.read(1)
+                n = self.fp.read(1)[0]
                 block = self.data()
-                if ord(s) == 249:
+                if not isinstance(n, int):
+                    n = ord(n)
+                if n == 249:
                     #
                     # graphic control extension
                     #
-                    flags = ord(block[0])
+                    flags = block[0]
+                    if not isinstance(flags, int):
+                        flags = ord(flags)
                     if flags & 1:
-                        self.info["transparency"] = ord(block[3])
+                        transparency = block[3]
+                        if not isinstance(transparency, int):
+                            transparency = ord(transparency)
+                        self.info["transparency"] = transparency
                     self.info["duration"] = i16(block[1:3]) * 10
                     try:
                         # disposal methods
@@ -156,19 +179,19 @@ class GifImageFile(ImageFile.ImageFile):
                             self.dispose = self.im.copy()
                     except (AttributeError, KeyError):
                         pass
-                elif ord(s) == 255:
+                elif n == 255:
                     #
                     # application extension
                     #
                     self.info["extension"] = block, self.fp.tell()
-                    if block[:11] == "NETSCAPE2.0":
+                    if block[:11] == b"NETSCAPE2.0":
                         block = self.data()
-                        if len(block) >= 3 and ord(block[0]) == 1:
+                        if len(block) >= 3 and block[0] == b'\x01':
                             self.info["loop"] = i16(block[1:3])
                 while self.data():
                     pass
 
-            elif s == ",":
+            elif s == b",":
                 #
                 # local image
                 #
@@ -177,7 +200,9 @@ class GifImageFile(ImageFile.ImageFile):
                 # extent
                 x0, y0 = i16(s[0:]), i16(s[2:])
                 x1, y1 = x0 + i16(s[4:]), y0 + i16(s[6:])
-                flags = ord(s[8])
+                flags = s[8]
+                if not isinstance(flags, int):
+                    flags = ord(flags)
 
                 interlace = (flags & 64) != 0
 
@@ -187,7 +212,10 @@ class GifImageFile(ImageFile.ImageFile):
                         ImagePalette.raw("RGB", self.fp.read(3<<bits))
 
                 # image data
-                bits = ord(self.fp.read(1))
+                bits = self.fp.read(1)[0]
+                if not isinstance(bits, int):
+                    bits = ord(bits)
+
                 self.__offset = self.fp.tell()
                 self.tile = [("gif",
                              (x0, y0, x1, y1),
@@ -197,11 +225,10 @@ class GifImageFile(ImageFile.ImageFile):
 
             else:
                 pass
-                # raise IOError, "illegal GIF tag `%x`" % ord(s)
 
         if not self.tile:
             # self.__fp = None
-            raise EOFError, "no more images in GIF file"
+            raise EOFError("no more images in GIF file")
 
         self.mode = "L"
         if self.palette:
@@ -326,13 +353,17 @@ def getheader(im, info=None):
     optimize = info and info.get("optimize", 0)
 
     s = [
-        "GIF87a" +              # magic
+        b"GIF87a" +              # magic
         o16(im.size[0]) +       # size
-        o16(im.size[1]) +
-        chr(7 + 128) +          # flags: bits + palette
-        chr(0) +                # background
-        chr(0)                  # reserved/aspect
+        o16(im.size[1])
     ]
+    if sys.version_info[0] < 3:
+        s += [chr(7 + 128) +   # flags: bits + palette
+        chr(0) +                # background
+        chr(0)]                 # reserved/aspect
+    else:
+        s += bytes([7+128,0,0])
+        
 
     if optimize:
         # minimize color palette
@@ -352,7 +383,10 @@ def getheader(im, info=None):
     else:
         # greyscale
         for i in range(maxcolor):
-            s.append(chr(i) * 3)
+            if sys.version_info[0] < 3:
+                s.append(chr(i) * 3)
+            else:
+                s.append([i] * 3)
 
     return s
 
@@ -374,17 +408,20 @@ def getdata(im, offset = (0, 0), **params):
         im.encoderinfo = params
 
         # local image header
-        fp.write("," +
+        fp.write(b"," +
                  o16(offset[0]) +       # offset
                  o16(offset[1]) +
                  o16(im.size[0]) +      # size
-                 o16(im.size[1]) +
-                 chr(0) +               # flags
+                 o16(im.size[1]))
+        if sys.version_info[0] < 3:
+            fp.write(chr(0) +           # flags
                  chr(8))                # bits
+        else:
+            fp.write(bytes([0,8]))
 
         ImageFile._save(im, fp, [("gif", (0,0)+im.size, 0, RAWMODE[im.mode])])
 
-        fp.write("\0") # end of image data
+        fp.write(b"\0") # end of image data
 
     finally:
         del im.encoderinfo

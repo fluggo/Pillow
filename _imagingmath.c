@@ -14,6 +14,12 @@
  */
 
 #include "Python.h"
+#if PY_MAJOR_VERSION >= 3
+#define IS_PY3K
+#ifndef DL_EXPORT
+#   define DL_EXPORT(RTYPE) RTYPE
+#endif
+#endif
 
 #include "Imaging.h"
 
@@ -221,21 +227,15 @@ static PyMethodDef _functions[] = {
 static void
 install(PyObject *d, char* name, void* value)
 {
-    PyObject *v = PyInt_FromLong((long) value);
+    PyObject *v = PyLong_FromLong((long) value);
     if (!v || PyDict_SetItemString(d, name, v))
         PyErr_Clear();
     Py_XDECREF(v);
 }
 
-DL_EXPORT(void)
-init_imagingmath(void)
+static void
+_install_dict(PyObject *d) 
 {
-    PyObject* m;
-    PyObject* d;
-
-    m = Py_InitModule("_imagingmath", _functions);
-    d = PyModule_GetDict(m);
-
     install(d, "abs_I", abs_I);
     install(d, "neg_I", neg_I);
     install(d, "add_I", add_I);
@@ -282,3 +282,75 @@ init_imagingmath(void)
     install(d, "ge_F", ge_F);
 
 }
+
+/*----------------------------------------------------------------------------*/
+struct module_state {
+    PyObject *error;
+};
+
+#ifdef IS_PY3K
+#define GETSTATE(m) ((struct module_state*)PyModule_GetState(m))
+
+static int traverse(PyObject *m, visitproc visit, void *arg) {
+    Py_VISIT(GETSTATE(m)->error);
+    return 0;
+}
+
+static int clear(PyObject *m) {
+    Py_CLEAR(GETSTATE(m)->error);
+    return 0;
+}
+
+static struct PyModuleDef moduledef = {
+        PyModuleDef_HEAD_INIT,
+        "_imagingmath",
+        NULL,
+        sizeof(struct module_state),
+        _functions,
+        NULL,
+        traverse,
+        clear,
+        NULL
+};
+
+PyObject *
+PyInit__imagingmath(void)
+{
+    PyObject *m;
+    PyObject *d;
+    PyObject *v;
+
+    m = PyModule_Create(&moduledef);
+    if (m == NULL)
+        return NULL;
+    struct module_state *st = GETSTATE(m);
+
+    st->error = PyErr_NewException("_imagingmath.Error", NULL, NULL);
+    if (st->error == NULL) {
+        Py_DECREF(m);
+        return NULL;
+    }
+
+    d = PyModule_GetDict(m);
+    _install_dict(d);
+
+
+    return m;
+}
+#else
+#define GETSTATE(m) (&_state)
+static struct module_state _state;
+
+DL_EXPORT(void)
+init_imagingmath(void)
+{
+    PyObject* m;
+    PyObject* d;
+
+    m = Py_InitModule("_imagingmath", _functions);
+
+    d = PyModule_GetDict(m);
+    _install_dict(d);
+
+}
+#endif

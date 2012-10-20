@@ -34,15 +34,29 @@
 
 __version__ = "0.6"
 
+import sys
 import array, struct
 import string
-import Image, ImageFile
+from PIL import Image, ImageFile
+
+def c2i(c):
+    if sys.version_info[0] < 3:
+        return ord(c)
+    else:
+        return c
 
 def i16(c,o=0):
-    return ord(c[o+1]) + (ord(c[o])<<8)
+    if sys.version_info[0] < 3:
+        return ord(c[o+1]) + (ord(c[o])<<8)
+    else:
+        return c[o+1] + (c[o]<<8)
 
 def i32(c,o=0):
-    return ord(c[o+3]) + (ord(c[o+2])<<8) + (ord(c[o+1])<<16) + (ord(c[o])<<24)
+    if sys.version_info[0] < 3:
+        return ord(c[o+3]) + (ord(c[o+2])<<8) + (ord(c[o+1])<<16) + (ord(c[o])<<24)
+    else:
+        return c[o+3] + (c[o+2]<<8) + (c[o+1]<<16) + (c[o]<<24)
+
 
 #
 # Parser
@@ -130,11 +144,11 @@ def SOF(self, marker):
     s = ImageFile._safe_read(self.fp, n)
     self.size = i16(s[3:]), i16(s[1:])
 
-    self.bits = ord(s[0])
+    self.bits = c2i(s[0])
     if self.bits != 8:
         raise SyntaxError("cannot handle %d-bit layers" % self.bits)
 
-    self.layers = ord(s[5])
+    self.layers = c2i(s[5])
     if self.layers == 1:
         self.mode = "L"
     elif self.layers == 3:
@@ -150,7 +164,7 @@ def SOF(self, marker):
     if self.icclist:
         # fixup icc profile
         self.icclist.sort() # sort by sequence number
-        if ord(self.icclist[0][13]) == len(self.icclist):
+        if c2i(self.icclist[0][13]) == len(self.icclist):
             profile = []
             for p in self.icclist:
                 profile.append(p[14:])
@@ -163,7 +177,7 @@ def SOF(self, marker):
     for i in range(6, len(s), 3):
         t = s[i:i+3]
         # 4-tuples: id, vsamp, hsamp, qtable
-        self.layer.append((t[0], ord(t[1])/16, ord(t[1])&15, ord(t[2])))
+        self.layer.append((t[0], c2i(t[1])//16, c2i(t[1])&15, c2i(t[2])))
 
 def DQT(self, marker):
     #
@@ -179,7 +193,7 @@ def DQT(self, marker):
     while len(s):
         if len(s) < 65:
             raise SyntaxError("bad quantization table marker")
-        v = ord(s[0])
+        v = c2i(s[0])
         if v/16 == 0:
             self.quantization[v&15] = array.array("b", s[1:65])
             s = s[65:]
@@ -259,7 +273,7 @@ MARKER = {
 
 
 def _accept(prefix):
-    return prefix[0] == "\377"
+    return prefix[0:1] == b"\xff"
 
 ##
 # Image plugin for JPEG and JFIF images.
@@ -273,7 +287,7 @@ class JpegImageFile(ImageFile.ImageFile):
 
         s = self.fp.read(1)
 
-        if ord(s[0]) != 255:
+        if c2i(s[0]) != 255:
             raise SyntaxError("not a JPEG file")
 
         # Create attributes
@@ -293,8 +307,7 @@ class JpegImageFile(ImageFile.ImageFile):
             s = s + self.fp.read(1)
 
             i = i16(s)
-
-            if MARKER.has_key(i):
+            if i in MARKER:
                 name, description, handler = MARKER[i]
                 # print hex(i), name, description
                 if handler is not None:
@@ -309,7 +322,7 @@ class JpegImageFile(ImageFile.ImageFile):
                 s = self.fp.read(1)
             elif i == 0 or i == 65535:
                 # padded marker or junk; move on
-                s = "\xff"
+                s = b"\xff"
             else:
                 raise SyntaxError("no marker found")
 
@@ -362,7 +375,7 @@ class JpegImageFile(ImageFile.ImageFile):
         # Extract EXIF information.  This method is highly experimental,
         # and is likely to be replaced with something better in a future
         # version.
-        import TiffImagePlugin, StringIO
+        import TiffImagePlugin, io
         def fixup(value):
             if len(value) == 1:
                 return value[0]
@@ -373,13 +386,13 @@ class JpegImageFile(ImageFile.ImageFile):
             data = self.info["exif"]
         except KeyError:
             return None
-        file = StringIO.StringIO(data[6:])
+        file = io.StringIO(data[6:])
         head = file.read(8)
         exif = {}
         # process dictionary
         info = TiffImagePlugin.ImageFileDirectory(head)
         info.load(file)
-        for key, value in info.items():
+        for key, value in list(info.items()):
             exif[key] = fixup(value)
         # get exif extension
         try:
@@ -389,7 +402,7 @@ class JpegImageFile(ImageFile.ImageFile):
         else:
             info = TiffImagePlugin.ImageFileDirectory(head)
             info.load(file)
-            for key, value in info.items():
+            for key, value in list(info.items()):
                 exif[key] = fixup(value)
         # get gpsinfo extension
         try:
@@ -400,7 +413,7 @@ class JpegImageFile(ImageFile.ImageFile):
             info = TiffImagePlugin.ImageFileDirectory(head)
             info.load(file)
             exif[0x8825] = gps = {}
-            for key, value in info.items():
+            for key, value in list(info.items()):
                 gps[key] = fixup(value)
         return exif
 
@@ -459,9 +472,9 @@ def _save(im, fp, filename):
         # "progressive" is the official name, but older documentation
         # says "progression"
         # FIXME: issue a warning if the wrong form is used (post-1.1.7)
-        info.has_key("progressive") or info.has_key("progression"),
+        "progressive" in info or "progression" in info,
         info.get("smooth", 0),
-        info.has_key("optimize"),
+        "optimize" in info,
         info.get("streamtype", 0),
         dpi[0], dpi[1],
         subsampling,

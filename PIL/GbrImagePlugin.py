@@ -12,11 +12,15 @@
 #
 # See the README file for information on usage and redistribution.
 #
-
-import Image, ImageFile
+import sys
+from PIL import Image, ImageFile
 
 def i32(c):
-    return ord(c[3]) + (ord(c[2])<<8) + (ord(c[1])<<16) + (ord(c[0])<<24L)
+    if sys.version_info[0] < 3:
+        return ord(c[0]) + (ord(c[1])<<8) + (ord(c[2])<<16) + (ord(c[3])<<24)
+    else:
+        return c[0] + (c[1]<<8) + (c[2]<<16) + (c[3]<<24)
+
 
 def _accept(prefix):
     return i32(prefix) >= 20 and i32(prefix[4:8]) == 1
@@ -34,13 +38,13 @@ class GbrImageFile(ImageFile.ImageFile):
         header_size = i32(self.fp.read(4))
         version = i32(self.fp.read(4))
         if header_size < 20 or version != 1:
-            raise SyntaxError, "not a GIMP brush"
+            raise SyntaxError("not a GIMP brush")
 
         width = i32(self.fp.read(4))
         height = i32(self.fp.read(4))
         bytes = i32(self.fp.read(4))
         if width <= 0 or height <= 0 or bytes != 1:
-            raise SyntaxError, "not a GIMP brush"
+            raise SyntaxError("not a GIMP brush")
 
         comment = self.fp.read(header_size - 20)[:-1]
 

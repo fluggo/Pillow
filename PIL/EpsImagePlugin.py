@@ -20,20 +20,27 @@
 
 __version__ = "0.5"
 
+import sys
 import re, string
-import Image, ImageFile
+from PIL import Image, ImageFile
 
 #
 # --------------------------------------------------------------------
 
 def i32(c):
-    return ord(c[0]) + (ord(c[1])<<8) + (ord(c[2])<<16) + (ord(c[3])<<24)
+    if sys.version_info[0] < 3:
+        return ord(c[0]) + (ord(c[1])<<8) + (ord(c[2])<<16) + (ord(c[3])<<24)
+    else:
+        return c[0] + (c[1]<<8) + (c[2]<<16) + (c[3]<<24)
 
 def o32(i):
-    return chr(i&255) + chr(i>>8&255) + chr(i>>16&255) + chr(i>>24&255)
+    if sys.version_info[0] < 3:
+        return chr(i&255) + chr(i>>8&255) + chr(i>>16&255) + chr(i>>24&255)
+    else:
+        return butes([i&255, i>>8&255, i>>16&255, i>>24&255])
 
-split = re.compile(r"^%%([^:]*):[ \t]*(.*)[ \t]*$")
-field = re.compile(r"^%[%!\w]([^:]*)[ \t]*$")
+split = re.compile(br"^%%([^:]*):[ \t]*(.*)[ \t]*$")
+field = re.compile(br"^%[%!\w]([^:]*)[ \t]*$")
 
 def Ghostscript(tile, size, fp):
     """Render an image using Ghostscript (Unix only)"""
@@ -99,24 +106,24 @@ class PSFile:
             pos = pos - 1
         return pos
     def readline(self):
-        s = ""
+        s = b""
         if self.char:
             c = self.char
             self.char = None
         else:
             c = self.fp.read(1)
-        while c not in "\r\n":
+        while c not in b"\r\n":
             s = s + c
             c = self.fp.read(1)
-        if c == "\r":
+        if c == b"\r":
             self.char = self.fp.read(1)
-            if self.char == "\n":
+            if self.char == b"\n":
                 self.char = None
-        return s + "\n"
+        return s + b"\n"
 
 
 def _accept(prefix):
-    return prefix[:4] == "%!PS" or i32(prefix) == 0xC6D3D0C5L
+    return prefix[:4] == b"%!PS" or i32(prefix) == 0xC6D3D0C5
 
 ##
 # Image plugin for Encapsulated Postscript.  This plugin supports only
@@ -137,16 +144,16 @@ class EpsImageFile(ImageFile.ImageFile):
 
         # HEAD
         s = fp.read(512)
-        if s[:4] == "%!PS":
+        if s[:4] == b"%!PS":
             offset = 0
             fp.seek(0, 2)
             length = fp.tell()
-        elif i32(s) == 0xC6D3D0C5L:
+        elif i32(s) == 0xC6D3D0C5:
             offset = i32(s[4:])
             length = i32(s[8:])
             fp.seek(offset)
         else:
-            raise SyntaxError, "not an EPS file"
+            raise SyntaxError("not an EPS file")
 
         fp.seek(offset)
 
@@ -163,27 +170,27 @@ class EpsImageFile(ImageFile.ImageFile):
         while s:
 
             if len(s) > 255:
-                raise SyntaxError, "not an EPS file"
+                raise SyntaxError("not an EPS file")
 
-            if s[-2:] == '\r\n':
+            if s[-2:] == b'\r\n':
                 s = s[:-2]
-            elif s[-1:] == '\n':
+            elif s[-1:] == b'\n':
                 s = s[:-1]
 
             try:
                 m = split.match(s)
-            except re.error, v:
-                raise SyntaxError, "not an EPS file"
+            except re.error as v:
+                raise SyntaxError("not an EPS file")
 
             if m:
                 k, v = m.group(1, 2)
                 self.info[k] = v
-                if k == "BoundingBox":
+                if k == b"BoundingBox":
                     try:
                         # Note: The DSC spec says that BoundingBox
                         # fields should be integers, but some drivers
                         # put floating point values there anyway.
-                        box = map(int, map(float, string.split(v)))
+                        box = [int(float(s)) for s in v.split()]
                         self.size = box[2] - box[0], box[3] - box[1]
                         self.tile = [("eps", (0,0) + self.size, offset,
                                       (length, box))]
@@ -196,42 +203,41 @@ class EpsImageFile(ImageFile.ImageFile):
 
                 if m:
                     k = m.group(1)
-                    if k == "EndComments":
+                    if k == b"EndComments":
                         break
-                    if k[:8] == "PS-Adobe":
+                    if k[:8] == b"PS-Adobe":
                         self.info[k[:8]] = k[9:]
                     else:
                         self.info[k] = ""
-                elif s[0] == '%':
+                elif s[0] == b'%':
                     # handle non-DSC Postscript comments that some
                     # tools mistakenly put in the Comments section
                     pass
                 else:
-                    raise IOError, "bad EPS header"
+                    raise IOError("bad EPS header")
 
             s = fp.readline()
 
-            if s[:1] != "%":
+            if s[:1] != b"%":
                 break
 
 
         #
         # Scan for an "ImageData" descriptor
 
-        while s[0] == "%":
+        while s[0] == b"%":
 
             if len(s) > 255:
-                raise SyntaxError, "not an EPS file"
+                raise SyntaxError("not an EPS file")
 
-            if s[-2:] == '\r\n':
+            if s[-2:] == b'\r\n':
                 s = s[:-2]
-            elif s[-1:] == '\n':
+            elif s[-1:] == b'\n':
                 s = s[:-1]
 
-            if s[:11] == "%ImageData:":
+            if s[:11] == b"%ImageData:":
 
-                [x, y, bi, mo, z3, z4, en, id] =\
-                    string.split(s[11:], maxsplit=7)
+                [x, y, bi, mo, z3, z4, en, id] = s[11:].split(maxsplit=7)
 
                 x = int(x); y = int(y)
 
@@ -257,7 +263,7 @@ class EpsImageFile(ImageFile.ImageFile):
                 else:
                     break
 
-                if id[:1] == id[-1:] == '"':
+                if id[:1] == id[-1:] == b'"':
                     id = id[1:-1]
 
                 # Scan forward to the actual image data
@@ -278,7 +284,7 @@ class EpsImageFile(ImageFile.ImageFile):
                 break
 
         if not box:
-            raise IOError, "cannot determine EPS bounding box"
+            raise IOError("cannot determine EPS bounding box")
 
     def load(self):
         # Load EPS via Ghostscript
@@ -308,7 +314,7 @@ def _save(im, fp, filename, eps=1):
     elif im.mode == "CMYK":
         operator = (8, 4, "false 4 colorimage")
     else:
-        raise ValueError, "image mode is not supported"
+        raise ValueError("image mode is not supported")
 
     if eps:
         #

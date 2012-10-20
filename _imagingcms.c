@@ -24,6 +24,15 @@ http://www.cazabon.com\n\
 "
 
 #include "Python.h"
+#if PY_MAJOR_VERSION >= 3
+#define IS_PY3K
+#ifndef DL_EXPORT
+#   define DL_EXPORT(RTYPE) RTYPE
+#endif
+#ifndef PyInt_FromLong
+#   define PyInt_FromLong(v) PyLong_FromLong(v)
+#endif
+#endif
 #include "lcms.h"
 #include "Imaging.h"
 
@@ -83,9 +92,9 @@ typedef struct {
     cmsHPROFILE profile;
 } CmsProfileObject;
 
-staticforward PyTypeObject CmsProfile_Type;
+extern PyTypeObject CmsProfile_Type;
 
-#define CmsProfile_Check(op) ((op)->ob_type == &CmsProfile_Type)
+#define CmsProfile_Check(op) (Py_TYPE(op) == &CmsProfile_Type)
 
 static PyObject*
 cms_profile_new(cmsHPROFILE profile)
@@ -156,9 +165,9 @@ typedef struct {
     cmsHTRANSFORM transform;
 } CmsTransformObject;
 
-staticforward PyTypeObject CmsTransform_Type;
+extern PyTypeObject CmsTransform_Type;
 
-#define CmsTransform_Check(op) ((op)->ob_type == &CmsTransform_Type)
+#define CmsTransform_Check(op) (Py_TYPE(op) == &CmsTransform_Type)
 
 static PyObject*
 cms_transform_new(cmsHTRANSFORM transform, char* mode_in, char* mode_out)
@@ -480,7 +489,7 @@ cms_get_display_profile_win32(PyObject* self, PyObject* args)
     }
 
     if (ok)
-        return PyString_FromStringAndSize(filename, filename_size-1);
+        return PyBytes_FromStringAndSize(filename, filename_size-1);
 
     Py_INCREF(Py_None);
     return Py_None;
@@ -516,26 +525,34 @@ static struct PyMethodDef cms_profile_methods[] = {
 static PyObject*  
 cms_profile_getattr(CmsProfileObject* self, char* name)
 {
+#ifndef IS_PY3K
+    PyObject* res;
+    res = Py_FindMethod(cms_profile_methods, (PyObject*) self, name);
+    if (res)
+	return res;
+#endif
+    PyErr_Clear();
+
     if (!strcmp(name, "product_name"))
-        return PyString_FromString(cmsTakeProductName(self->profile));
+        return PyBytes_FromString(cmsTakeProductName(self->profile));
     if (!strcmp(name, "product_desc"))
-        return PyString_FromString(cmsTakeProductDesc(self->profile));
+        return PyBytes_FromString(cmsTakeProductDesc(self->profile));
     if (!strcmp(name, "product_info"))
-        return PyString_FromString(cmsTakeProductInfo(self->profile));
+        return PyBytes_FromString(cmsTakeProductInfo(self->profile));
     if (!strcmp(name, "rendering_intent"))
         return PyInt_FromLong(cmsTakeRenderingIntent(self->profile));
     if (!strcmp(name, "pcs"))
-        return PyString_FromString(findICmode(cmsGetPCS(self->profile)));
+        return PyBytes_FromString(findICmode(cmsGetPCS(self->profile)));
     if (!strcmp(name, "color_space"))
-        return PyString_FromString(findICmode(cmsGetColorSpace(self->profile)));
+        return PyBytes_FromString(findICmode(cmsGetColorSpace(self->profile)));
     /* FIXME: add more properties (creation_datetime etc) */
 
-    return Py_FindMethod(cms_profile_methods, (PyObject*) self, name);
+    return NULL;
 }
 
-statichere PyTypeObject CmsProfile_Type = {
-    PyObject_HEAD_INIT(NULL)
-    0, "CmsProfile", sizeof(CmsProfileObject), 0,
+PyTypeObject CmsProfile_Type = {
+    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+    "CmsProfile", sizeof(CmsProfileObject), 0,
     /* methods */
     (destructor) cms_profile_dealloc, /*tp_dealloc*/
     0, /*tp_print*/
@@ -558,16 +575,16 @@ static PyObject*
 cms_transform_getattr(CmsTransformObject* self, char* name)
 {
     if (!strcmp(name, "inputMode"))
-        return PyString_FromString(self->mode_in);
+        return PyBytes_FromString(self->mode_in);
     if (!strcmp(name, "outputMode"))
-        return PyString_FromString(self->mode_out);
+        return PyBytes_FromString(self->mode_out);
 
     return Py_FindMethod(cms_transform_methods, (PyObject*) self, name);
 }
 
-statichere PyTypeObject CmsTransform_Type = {
-    PyObject_HEAD_INIT(NULL)
-    0, "CmsTransform", sizeof(CmsTransformObject), 0,
+PyTypeObject CmsTransform_Type = {
+    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+    "CmsTransform", sizeof(CmsTransformObject), 0,
     /* methods */
     (destructor) cms_transform_dealloc, /*tp_dealloc*/
     0, /*tp_print*/
@@ -581,6 +598,65 @@ statichere PyTypeObject CmsTransform_Type = {
     0 /*tp_hash*/
 };
 
+/*----------------------------------------------------------------------------*/
+struct module_state {
+    PyObject *error;
+};
+
+#ifdef IS_PY3K
+#define GETSTATE(m) ((struct module_state*)PyModule_GetState(m))
+
+static int traverse(PyObject *m, visitproc visit, void *arg) {
+    Py_VISIT(GETSTATE(m)->error);
+    return 0;
+}
+
+static int clear(PyObject *m) {
+    Py_CLEAR(GETSTATE(m)->error);
+    return 0;
+}
+
+static struct PyModuleDef moduledef = {
+        PyModuleDef_HEAD_INIT,
+        "_imagingcms",
+        NULL,
+        sizeof(struct module_state),
+        pyCMSdll_methods,
+        NULL,
+        traverse,
+        clear,
+        NULL
+};
+
+PyObject *
+PyInit__imagingcms(void)
+{
+    PyObject *m;
+    PyObject *d;
+    PyObject *v;
+
+    m = PyModule_Create(&moduledef);
+    if (m == NULL)
+        return NULL;
+    struct module_state *st = GETSTATE(m);
+
+    st->error = PyErr_NewException("_imagingcms.Error", NULL, NULL);
+    if (st->error == NULL) {
+        Py_DECREF(m);
+        return NULL;
+    }
+
+    d = PyModule_GetDict(m);
+
+    v = PyBytes_FromFormat("%d.%d", LCMS_VERSION / 100, LCMS_VERSION % 100);
+    PyDict_SetItemString(d, "littlecms_version", v);
+
+    return m;
+}
+#else
+#define GETSTATE(m) (&_state)
+static struct module_state _state;
+
 DL_EXPORT(void)
 init_imagingcms(void)
 {
@@ -588,21 +664,10 @@ init_imagingcms(void)
     PyObject *d;
     PyObject *v;
 
-    /* Patch up object types */
-    CmsProfile_Type.ob_type = &PyType_Type;
-    CmsTransform_Type.ob_type = &PyType_Type;
-
     m = Py_InitModule("_imagingcms", pyCMSdll_methods);
     d = PyModule_GetDict(m);
 
-#if PY_VERSION_HEX >= 0x02020000
-    v = PyString_FromFormat("%d.%d", LCMS_VERSION / 100, LCMS_VERSION % 100);
-#else
-    {
-        char buffer[100];
-        sprintf(buffer, "%d.%d", LCMS_VERSION / 100, LCMS_VERSION % 100);
-        v = PyString_FromString(buffer);
-    }
-#endif
+    v = PyBytes_FromFormat("%d.%d", LCMS_VERSION / 100, LCMS_VERSION % 100);
     PyDict_SetItemString(d, "littlecms_version", v);
 }
+#endif
